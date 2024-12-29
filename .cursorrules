@@ -1,0 +1,935 @@
+You are in charge of the 'tangent' python package and the development of projects using it.
+
+# Project Structure
+
+<tree_structure>
+.
+├── .cursorrules
+├── .env
+├── config
+│   ├── agents
+│   │   ├── gateway_agent
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── __init__.cpython-311.pyc
+│   │   │   │   ├── agents.cpython-311.pyc
+│   │   │   │   ├── evals_util.cpython-311.pyc
+│   │   │   ├── agents.py
+│   │   │   ├── evals.py
+│   │   │   ├── evals_util.py
+│   ├── tools
+│   │   ├── __init__.py
+│   │   ├── applescript_tool.py
+│   │   ├── terminal_tool.py
+├── main.py
+├── tangent
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-311.pyc
+│   │   ├── core.cpython-311.pyc
+│   │   ├── types.cpython-311.pyc
+│   │   ├── util.cpython-311.pyc
+│   ├── core.py
+│   ├── repl
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   ├── repl.cpython-311.pyc
+│   │   ├── repl.py
+│   ├── types.py
+│   ├── util.py
+</tree_structure>
+
+**IMPORTANT**
+- The Gateway Agent should be both:
+1. A direct executor (using tools directly for simple tasks)
+2. An orchestrator (delegating to specialized agents for complex tasks)
+- All tool functions should return a Result object.
+
+# **tangent Python Library Documentation**
+
+### **Overview**
+
+The `core.py` module implements the main tangent system, which manages agent-based chat completions and function execution. It provides a flexible framework for handling conversational AI agents with support for tool calls, context management, and streaming responses.
+
+### **Class: tangent**
+
+#### **Description**
+
+The `tangent` class is the primary interface for managing AI agent interactions. It handles chat completions, function calls, and maintains conversation state across multiple turns.
+
+#### **Initialization**
+
+```python
+def __init__(self, client=None):
+    if not client:
+        client = OpenAI()
+    self.client = client
+```
+
+- The `tangent` class can be initialized with an optional OpenAI client.  
+- If no client is provided, it creates a default OpenAI client instance.
+
+#### **Key Methods**
+
+1. **`get_chat_completion`**
+
+   ```python
+   def get_chat_completion(
+       self,
+       agent: Agent,
+       history: List,
+       context_variables: dict,
+       model_override: str,
+       stream: bool,
+       debug: bool,
+   ) -> ChatCompletionMessage:
+   ```
+
+   **Purpose**  
+   Generates chat completions using the specified agent and conversation history.
+
+   **Parameters**  
+   - `agent`: Agent configuration object containing model and instruction details  
+   - `history`: List of previous conversation messages  
+   - `context_variables`: Dictionary of context variables for the conversation  
+   - `model_override`: Optional alternative model to use instead of the agent’s default  
+   - `stream`: Boolean flag for streaming responses  
+   - `debug`: Boolean flag for debug output  
+
+   **Behavior**  
+   - Processes agent instructions with context variables  
+   - Prepares tools/functions for the model  
+   - Removes internal context variables from tool parameters  
+   - Configures and executes the chat completion request  
+
+2. **`handle_function_result`**
+
+   ```python
+   def handle_function_result(self, result, debug) -> Result:
+   ```
+
+   **Purpose**  
+   Processes and standardizes function execution results.
+
+   **Behavior**  
+   - Handles different result types (`Result` objects, `Agent` objects, or other values)  
+   - Converts results to appropriate `Result` objects  
+   - Provides error handling for invalid return types  
+
+3. **`handle_tool_calls`**
+
+   ```python
+   def handle_tool_calls(
+       self,
+       tool_calls: List[ChatCompletionMessageToolCall],
+       functions: List[AgentFunction],
+       context_variables: dict,
+       debug: bool,
+   ) -> Response:
+   ```
+
+   **Purpose**  
+   Executes tool calls made by the agent and processes their results.
+
+   **Behavior**  
+   - Maps tool calls to available functions  
+   - Executes functions with provided arguments  
+   - Handles missing tools gracefully  
+   - Maintains conversation context and agent state  
+   - Processes function results and updates context variables  
+
+4. **`run_and_stream`**
+
+   ```python
+   def run_and_stream(
+       self,
+       agent: Agent,
+       messages: List,
+       context_variables: dict = {},
+       model_override: str = None,
+       debug: bool = False,
+       max_turns: int = float("inf"),
+       execute_tools: bool = True,
+   ):
+   ```
+
+   **Purpose**  
+   Executes the conversation with streaming support, yielding updates as they occur.
+
+   **Key Features**  
+   - Supports real-time streaming of model responses  
+   - Manages conversation turns and tool execution  
+   - Maintains conversation state and context  
+   - Provides progress delimitation (“start” / “end”)  
+
+5. **`run`**
+
+   ```python
+   def run(
+       self,
+       agent: Agent,
+       messages: List,
+       context_variables: dict = {},
+       model_override: str = None,
+       stream: bool = False,
+       debug: bool = False,
+       max_turns: int = float("inf"),
+       execute_tools: bool = True,
+   ) -> Response:
+   ```
+
+   **Purpose**  
+   Main method for executing conversations, with optional streaming support.
+
+   **Key Features**  
+   - Manages complete conversation flow  
+   - Handles tool execution and agent switching  
+   - Maintains conversation context  
+   - Supports both streaming and non-streaming modes  
+
+### **Important Constants**
+
+- `__CTX_VARS_NAME__`: Defines the key for context variables (`"context_variables"`)
+
+### **Response Types**
+
+The system uses several response types:
+
+- `Response`: Contains messages, agent state, and context variables  
+- `Result`: Represents function execution results  
+- `ChatCompletionMessage`: OpenAI chat completion responses  
+- `ChatCompletionMessageToolCall`: Tool call information  
+
+### **Context Management**
+
+The system maintains context through:
+
+- A dictionary of context variables  
+- Conversation history  
+- Agent state tracking  
+- Tool/function execution results  
+
+### **Error Handling**
+
+The system includes error handling for:
+
+- Missing tools/functions  
+- Invalid function returns  
+- Type conversion errors  
+- General execution errors  
+
+### **Best Practices**
+
+1. **Initialization**
+
+   ```python
+   from tangent import tangent
+
+   # Default OpenAI client
+   tangent = tangent()
+
+   # Or a custom OpenAI client
+   tangent = tangent(custom_client)
+   ```
+
+2. **Basic Usage**
+
+   ```python
+   response = tangent.run(
+       agent=my_agent,
+       messages=conversation_history,
+       context_variables={"key": "value"}
+   )
+   ```
+
+3. **Streaming Usage**
+
+   ```python
+   for chunk in tangent.run(
+       agent=my_agent,
+       messages=conversation_history,
+       stream=True
+   ):
+       # Process streaming chunks
+       pass
+   ```
+
+### **Dependencies**
+
+- `openai`: OpenAI API client  
+- Standard library: `copy`, `json`, `collections.defaultdict`, `typing`  
+- Local modules: `.util`, `.types`  
+
+### **Notes**
+
+- The system is designed to be extensible through custom agents and functions  
+- Supports both synchronous and streaming operations  
+- Maintains conversation state across multiple turns  
+- Handles complex tool/function execution patterns  
+- Provides debug capabilities for troubleshooting  
+
+---
+
+## **tangent Types Documentation**
+
+### **Overview**
+
+The `types.py` module defines the core data structures and type definitions used throughout the tangent system. It provides Pydantic models for agents, responses, and results, along with type definitions for agent functions and tool calls.
+
+### **Type Definitions**
+
+#### **`AgentFunction`**
+
+```python
+AgentFunction = Callable[[], Union[str, "Agent", dict]]
+```
+
+**Description**  
+A type alias for callable agent functions.
+
+**Return Types**  
+- `str`: A string response  
+- `Agent`: Another agent instance for agent switching  
+- `dict`: A dictionary of values  
+
+### **Models**
+
+#### **Agent**
+
+```python
+class Agent(BaseModel):
+    name: str = "Agent"
+    model: str = "gpt-4o"
+    instructions: Union[str, Callable[[], str]] = "You are a helpful agent."
+    functions: List[AgentFunction] = []
+    tool_choice: str = None
+    parallel_tool_calls: bool = True
+```
+
+**Purpose**  
+Defines the configuration and behavior of an AI agent.
+
+**Attributes**  
+- `name`: Agent identifier (default: "Agent")  
+- `model`: OpenAI model to use (default: "gpt-4o")  
+- `instructions`: System instructions for the agent (can be a string or callable)  
+- `functions`: List of available functions/tools for the agent  
+- `tool_choice`: Tool selection preference  
+- `parallel_tool_calls`: Whether multiple tools can be called in parallel  
+
+**Usage Example**
+
+```python
+agent = Agent(
+    name="CustomAgent",
+    model="gpt-4o",
+    instructions="You are a specialized agent for task X.",
+    functions=[custom_function1, custom_function2]
+)
+```
+
+#### **Response**
+
+```python
+class Response(BaseModel):
+    messages: List = []
+    agent: Optional[Agent] = None
+    context_variables: dict = {}
+```
+
+**Purpose**  
+Encapsulates the complete response from an agent interaction.
+
+**Attributes**  
+- `messages`: List of conversation messages  
+- `agent`: Current active agent (optional)  
+- `context_variables`: Dictionary of context variables  
+
+**Usage Example**
+
+```python
+response = Response(
+    messages=[message1, message2],
+    agent=current_agent,
+    context_variables={"key": "value"}
+)
+```
+
+#### **Result**
+
+```python
+class Result(BaseModel):
+    value: str = ""
+    agent: Optional[Agent] = None
+    context_variables: dict = {}
+```
+
+**Purpose**  
+Encapsulates the return value from an agent function execution.
+
+**Attributes**  
+- `value`: String representation of the function result  
+- `agent`: Next agent to use (optional, for agent switching)  
+- `context_variables`: Updated context variables  
+
+**Usage Example**
+
+```python
+result = Result(
+    value="Function execution result",
+    agent=next_agent,
+    context_variables={"new_key": "new_value"}
+)
+```
+
+### **OpenAI Type Imports**
+
+The module imports and uses several OpenAI-specific types:
+
+```python
+from openai.types.chat import ChatCompletionMessage
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+    Function,
+)
+```
+
+These types are used for:
+
+- `ChatCompletionMessage`: Representing chat completion responses  
+- `ChatCompletionMessageToolCall`: Managing tool call information  
+- `Function`: Defining function structures for tool calls  
+
+### **Model Inheritance**
+
+All main models inherit from `pydantic.BaseModel`, providing:
+
+- Data validation  
+- Serialization/deserialization  
+- Type checking  
+- Default value handling  
+
+### **Best Practices**
+
+1. **Agent Creation**
+
+   ```python
+   def get_instructions(context):
+       return f"You are an agent with context: {context}"
+
+   agent = Agent(
+       name="ContextualAgent",
+       instructions=get_instructions,
+       functions=relevant_functions
+   )
+   ```
+
+2. **Result Handling**
+
+   ```python
+   def agent_function():
+       return Result(
+           value="Operation completed",
+           context_variables={"status": "done"}
+       )
+   ```
+
+3. **Response Processing**
+
+   ```python
+   if response.agent:
+       # Handle agent switching
+       new_agent = response.agent
+
+   # Access conversation history
+   messages = response.messages
+
+   # Use context variables
+   context = response.context_variables
+   ```
+
+### **Type Checking**
+
+The module supports static type checking through:
+
+- Type hints for all attributes  
+- Optional types where appropriate  
+- Union types for flexible inputs  
+- List type specifications  
+
+### **Dependencies**
+
+- `pydantic`: For data validation and settings management  
+- `openai.types`: For OpenAI-specific type definitions  
+- `typing`: For Python type hints  
+
+### **Notes**
+
+- All models use Pydantic for robust data validation  
+- Models support optional fields with sensible defaults  
+- Type definitions enable static type checking  
+- The system supports dynamic agent instructions through callable functions  
+- Agent functions can return multiple types of results  
+
+---
+
+## **tangent Utilities Documentation**
+
+### **Overview**
+
+The `util.py` module provides essential utility functions for the tangent system, handling debugging, response merging, and function conversion operations.
+
+### **Functions**
+
+1. **`debug_print`**
+
+   ```python
+   def debug_print(debug: bool, *args: str) -> None
+   ```
+
+   **Purpose**  
+   Prints timestamped debug messages when debugging is enabled.
+
+   **Parameters**  
+   - `debug`: Boolean flag to enable/disable debug output  
+   - `*args`: Variable number of strings to print  
+
+   **Behavior**  
+   - Only prints if `debug` is `True`  
+   - Adds timestamp to message  
+   - Formats output with ANSI color codes  
+   - Joins multiple arguments with spaces  
+
+   **Example Usage**
+
+   ```python
+   debug_print(True, "Processing request", "ID:", 123)
+   # Output: [2024-12-29 14:30:45] Processing request ID: 123
+   ```
+
+2. **`merge_fields`**
+
+   ```python
+   def merge_fields(target, source)
+   ```
+
+   **Purpose**  
+   Recursively merges fields from a source dictionary into a target dictionary.
+
+   **Parameters**  
+   - `target`: Dictionary to merge into  
+   - `source`: Dictionary to merge from  
+
+   **Behavior**  
+   - Handles string concatenation for string values  
+   - Recursively merges nested dictionaries  
+   - Preserves existing structure in `target`  
+
+   **Example Usage**
+
+   ```python
+   target = {"text": "Hello", "nested": {"value": "old"}}
+   source = {"text": " World", "nested": {"value": " new"}}
+   merge_fields(target, source)
+   # Result: {"text": "Hello World", "nested": {"value": "old new"}}
+   ```
+
+3. **`merge_chunk`**
+
+   ```python
+   def merge_chunk(final_response: dict, delta: dict) -> None
+   ```
+
+   **Purpose**  
+   Merges streaming response chunks into a final response, specifically handling tool calls.
+
+   **Parameters**  
+   - `final_response`: Dictionary containing the accumulated response  
+   - `delta`: Dictionary containing the new chunk to merge  
+
+   **Behavior**  
+   - Removes `role` field from `delta`  
+   - Merges general fields using `merge_fields`  
+   - Special handling for tool calls:
+     - Extracts tool call index  
+     - Merges tool call data into the correct position  
+     - Maintains tool call structure  
+
+   **Example Usage**
+
+   ```python
+   final_response = {"content": "Initial", "tool_calls": {}}
+   delta = {
+       "content": " addition",
+       "tool_calls": [{
+           "index": 0,
+           "function": {"arguments": "new args"}
+       }]
+   }
+   merge_chunk(final_response, delta)
+   ```
+
+4. **`function_to_json`**
+
+   ```python
+   def function_to_json(func) -> dict
+   ```
+
+   **Purpose**  
+   Converts a Python function into a JSON-serializable format suitable for API consumption.
+
+   **Parameters**  
+   - `func`: Python function to convert  
+
+   **Returns**  
+   - Dictionary containing the function’s signature in JSON format  
+
+   **Type Mapping**
+
+   ```python
+   type_map = {
+       str: "string",
+       int: "integer",
+       float: "number",
+       bool: "boolean",
+       list: "array",
+       dict: "object",
+       type(None): "null",
+   }
+   ```
+
+   **Behavior**  
+   - Extracts function signature using `inspect`  
+   - Maps Python types to JSON schema types  
+   - Identifies required parameters  
+   - Includes function documentation  
+   - Handles parameter annotations  
+
+   **Example Usage**
+
+   ```python
+   def example_func(param1: str, param2: int = 0) -> str:
+       """Example function documentation."""
+       return f"{param1}: {param2}"
+
+   json_spec = function_to_json(example_func)
+   # Results in:
+   # {
+   #     "type": "function",
+   #     "function": {
+   #         "name": "example_func",
+   #         "description": "Example function documentation.",
+   #         "parameters": {
+   #             "type": "object",
+   #             "properties": {
+   #                 "param1": {"type": "string"},
+   #                 "param2": {"type": "integer"}
+   #             },
+   #             "required": ["param1"]
+   #         }
+   #     }
+   # }
+   ```
+
+### **Error Handling**
+
+#### **`function_to_json` Errors**
+
+1. **Signature Extraction**
+
+   ```python
+   try:
+       signature = inspect.signature(func)
+   except ValueError as e:
+       raise ValueError(f"Failed to get signature for function {func.__name__}: {str(e)}")
+   ```
+
+2. **Type Mapping**
+
+   ```python
+   try:
+       param_type = type_map.get(param.annotation, "string")
+   except KeyError as e:
+       raise KeyError(f"Unknown type annotation {param.annotation} for parameter {param.name}: {str(e)}")
+   ```
+
+### **Dependencies**
+
+- `inspect`: For function introspection  
+- `datetime`: For timestamp generation  
+
+### **Best Practices**
+
+1. **Debug Output**
+
+   ```python
+   # Enable debug output during development
+   debug_print(True, "Debug message")
+
+   # Disable in production
+   debug_print(False, "This won't print")
+   ```
+
+2. **Function Conversion**
+
+   ```python
+   # Always include docstrings for converted functions
+   def my_function(param: str):
+       """Clear description of function purpose."""
+       pass
+   ```
+
+3. **Chunk Merging**
+
+   ```python
+   # Initialize response with proper structure
+   response = {
+       "content": "",
+       "tool_calls": {}
+   }
+   ```
+
+### **Notes**
+
+- Debug output uses ANSI color codes for better visibility  
+- Merge operations modify the target dictionary in place  
+- Function conversion handles most common Python types  
+- Tool call merging maintains streaming response structure  
+- All functions are designed to be thread-safe  
+
+---
+
+## **tangent REPL Documentation**
+
+### **Overview**
+
+The `repl.py` module implements a command-line interface (REPL - Read-Eval-Print Loop) for the tangent system. It provides functionality for interactive conversations with agents, handling both streaming and non-streaming responses, and formatted output display.
+
+### **Functions**
+
+1. **`process_and_print_streaming_response`**
+
+   ```python
+   def process_and_print_streaming_response(response)
+   ```
+
+   **Purpose**  
+   Processes and displays streaming responses from the tangent system in real-time.
+
+   **Parameters**  
+   - `response`: Iterator of response chunks from the tangent system  
+
+   **Returns**  
+   - Final response object when streaming is complete  
+
+   **Behavior**  
+   - Maintains conversation state during streaming  
+   - Handles different types of chunks:  
+     - Content chunks  
+     - Tool call chunks  
+     - Delimiter chunks  
+     - Final response chunk  
+   - Provides colored output for different message components  
+
+   **Output Formatting**  
+   - Agent names in blue (ANSI color code 94)  
+   - Tool names in purple (ANSI color code 95)  
+   - Content in default color  
+   - Proper spacing and line breaks  
+
+   **Example Output**  
+   ```
+   AgentName: This is a response content
+   AgentName: tool_name()
+   ```
+
+2. **`pretty_print_messages`**
+
+   ```python
+   def pretty_print_messages(messages) -> None
+   ```
+
+   **Purpose**  
+   Formats and displays non-streaming message history with proper formatting.
+
+   **Parameters**  
+   - `messages`: List of message dictionaries to display  
+
+   **Behavior**  
+   - Only processes assistant messages  
+   - Formats output with color coding:  
+     - Agent names in blue  
+     - Tool calls in purple  
+   - Handles multiple tool calls with proper spacing  
+   - Formats function arguments for readability  
+
+   **Example Usage**
+
+   ```python
+   messages = [
+       {
+           "role": "assistant",
+           "sender": "Agent",
+           "content": "Response text",
+           "tool_calls": [
+               {"function": {"name": "tool", "arguments": '{"arg": "value"}'}}
+           ]
+       }
+   ]
+   pretty_print_messages(messages)
+   ```
+
+3. **`run_tangent_loop`**
+
+   ```python
+   def run_tangent_loop(
+       starting_agent,
+       context_variables=None,
+       stream=False,
+       debug=False
+   ) -> None
+   ```
+
+   **Purpose**  
+   Implements the main REPL loop for interactive conversations with agents.
+
+   **Parameters**  
+   - `starting_agent`: Initial agent to start the conversation  
+   - `context_variables`: Optional dictionary of context variables  
+   - `stream`: Boolean flag for streaming mode  
+   - `debug`: Boolean flag for debug output  
+
+   **Behavior**  
+   - Initializes tangent client  
+   - Maintains conversation history  
+   - Handles user input  
+   - Processes agent responses  
+   - Supports agent switching  
+   - Manages streaming and non-streaming modes  
+
+   **Example Usage**
+
+   ```python
+   from tangent import Agent
+
+   agent = Agent(name="Demo", instructions="You are a helpful assistant.")
+   run_tangent_loop(
+       starting_agent=agent,
+       context_variables={"key": "value"},
+       stream=True
+   )
+   ```
+
+### **Color Coding System**
+
+The REPL uses ANSI color codes for better readability:
+
+```python
+COLORS = {
+    "BLUE": "\033[94m",    # Agent names
+    "PURPLE": "\033[95m",  # Tool calls
+    "GRAY": "\033[90m",    # User prompt
+    "RESET": "\033[0m"     # Reset color
+}
+```
+
+### **Output Formatting**
+
+1. **Message Structure**
+
+   ```
+   Agent: Message content
+   Agent: tool_name(arg=value)
+   User: Input message
+   ```
+
+2. **Streaming Output**
+
+   - Real-time display of content chunks  
+   - Immediate tool call notifications  
+   - Clear delineation between messages  
+   - Proper handling of multi-line content  
+
+### **Best Practices**
+
+1. **Starting the REPL**
+
+   ```python
+   # Basic usage
+   run_tangent_loop(agent)
+
+   # With streaming and debug
+   run_tangent_loop(
+       agent,
+       stream=True,
+       debug=True
+   )
+   ```
+
+2. **Context Management**
+
+   ```python
+   # Initialize with context
+   context = {
+       "user_id": "123",
+       "session": "active"
+   }
+   run_tangent_loop(agent, context_variables=context)
+   ```
+
+3. **Message Processing**
+
+   ```python
+   # Process specific messages
+   messages = get_message_history()
+   pretty_print_messages(messages)
+   ```
+
+### **Dependencies**
+
+- `json`: For parsing and formatting tool call arguments  
+- `tangent`: For the main tangent system functionality  
+
+### **Notes**
+
+- The REPL provides a user-friendly interface for testing and development  
+- Color coding helps distinguish different message components  
+- Streaming mode provides real-time feedback  
+- The system maintains conversation context across multiple turns  
+- Debug mode is available for troubleshooting  
+- Supports both simple conversations and complex tool interactions  
+
+### **Error Handling**
+
+The REPL handles several scenarios:
+
+- Invalid user input  
+- Malformed response chunks  
+- JSON parsing errors  
+- Tool call formatting issues  
+- Stream interruptions  
+
+### **Interactive Features**
+
+1. **User Input**  
+   - Clean input prompt  
+   - History maintenance  
+   - Context preservation  
+
+2. **Response Display**  
+   - Color-coded output  
+   - Structured formatting  
+   - Real-time updates in streaming mode  
+   - Clear message boundaries  
+
+3. **Tool Calls**  
+   - Immediate notification  
+   - Argument formatting  
+   - Visual distinction from regular content  
+
+4. **Session Management**  
+   - Continuous operation  
+   - Context preservation  
+   - Agent state tracking  
+   - Message history maintenance  
