@@ -23,7 +23,7 @@ from .types import (
 __CTX_VARS_NAME__ = "context_variables"
 
 
-class Tangent:
+class tangent:
     def __init__(self, client=None):
         if not client:
             client = OpenAI()
