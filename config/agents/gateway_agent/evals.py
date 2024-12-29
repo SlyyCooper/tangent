@@ -1,4 +1,4 @@
-from tangent import Tangent
+from tangent import tangent
 from .agents import (
     gateway_agent,
     applescript_agent,
@@ -10,7 +10,7 @@ from .evals_util import evaluate_with_llm_bool, BoolEvalResult
 import pytest
 import json
 
-client = Tangent()
+client = tangent()
 
 GATEWAY_EVAL_SYSTEM_PROMPT = """
 You will evaluate a conversation between a user and a gateway agent that manages Mac OS automation tasks.
