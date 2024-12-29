@@ -1,4 +1,4 @@
-from .core import tangent
-from .types import Agent, Response
+from .core import Tangent
+from .types import Agent, Response, Result
 
-__all__ = ["tangent", "Agent", "Response"]
+__all__ = ["Tangent", "Agent", "Response", "Result"]

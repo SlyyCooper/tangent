@@ -1,6 +1,6 @@
 import json
 
-from tangent import tangent
+from tangent import Tangent
 
 
 def process_and_print_streaming_response(response):
@@ -60,7 +60,7 @@ def pretty_print_messages(messages) -> None:
 def run_tangent_loop(
     starting_agent, context_variables=None, stream=False, debug=False
 ) -> None:
-    client = tangent()
+    client = Tangent()
     print("Starting tangent CLI 🐝")
 
     messages = []
