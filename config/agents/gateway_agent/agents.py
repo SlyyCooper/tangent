@@ -2,6 +2,7 @@ from tangent import Agent
 from tangent.types import Result
 from config.tools.applescript_tool import run_applescript, create_applescript, execute_saved_script
 from config.tools.terminal_tool import run_command, run_background_command, get_environment_info, kill_process
+from config.tools.database_tool import execute_query, get_table_list, get_table_info
 
 
 def execute_applescript(script: str) -> Result:
@@ -37,6 +38,21 @@ def get_shell_info() -> Result:
 def terminate_process(pid: int) -> Result:
     """Kill a background process by its PID."""
     return kill_process(pid)
+
+
+def run_sql_query(query: str) -> Result:
+    """Execute a SQL query on the PostgreSQL database."""
+    return execute_query(query)
+
+
+def list_database_tables() -> Result:
+    """Get a list of all tables in the database."""
+    return get_table_list()
+
+
+def get_table_structure(table_name: str) -> Result:
+    """Get the structure of a specific table."""
+    return get_table_info(table_name)
 
 
 class TaskContext:
@@ -158,6 +174,14 @@ Your responsibilities:
 3. Manage task delegation to specialized agents while maintaining conversation continuity
 4. Track and manage state across agent transitions
 5. Ensure consistent user experience throughout the interaction
+6. Handle database operations and queries effectively
+
+You can:
+- Execute terminal commands and background processes
+- Run AppleScript commands for GUI automation
+- Query the PostgreSQL database
+- List database tables and their structures
+- Execute complex SQL queries
 
 Before delegating:
 - Gather all necessary context from the user
@@ -181,7 +205,10 @@ When delegating:
         execute_command,
         execute_background_command,
         get_shell_info,
-        terminate_process
+        terminate_process,
+        run_sql_query,
+        list_database_tables,
+        get_table_structure
     ]
 )
 
