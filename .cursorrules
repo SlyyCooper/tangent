@@ -4,8 +4,186 @@ You are in charge of the 'tangent' python package and the development of project
 
 <tree_structure>
 .
+├── .DS_Store
 ├── .cursorrules
 ├── .env
+├── .git
+│   ├── AUTO_MERGE
+│   ├── COMMIT_EDITMSG
+│   ├── FETCH_HEAD
+│   ├── HEAD
+│   ├── branches
+│   ├── config
+│   ├── description
+│   ├── hooks
+│   │   ├── applypatch-msg.sample
+│   │   ├── commit-msg.sample
+│   │   ├── fsmonitor-watchman.sample
+│   │   ├── post-update.sample
+│   │   ├── pre-applypatch.sample
+│   │   ├── pre-commit.sample
+│   │   ├── pre-merge-commit.sample
+│   │   ├── pre-push.sample
+│   │   ├── pre-rebase.sample
+│   │   ├── pre-receive.sample
+│   │   ├── prepare-commit-msg.sample
+│   │   ├── push-to-checkout.sample
+│   │   ├── sendemail-validate.sample
+│   │   ├── update.sample
+│   ├── index
+│   ├── info
+│   │   ├── exclude
+│   ├── logs
+│   │   ├── HEAD
+│   │   ├── refs
+│   │   │   ├── heads
+│   │   │   │   ├── main
+│   │   │   ├── remotes
+│   │   │   │   ├── origin
+│   │   │   │   │   ├── HEAD
+│   │   │   │   │   ├── main
+│   ├── objects
+│   │   ├── 02
+│   │   │   ├── 79c5372371a0481d541378f0956b5670e992a9
+│   │   ├── 09
+│   │   │   ├── 1c5e7dc1b2a2cb36e6cb456752f39f8a6f882b
+│   │   ├── 0b
+│   │   │   ├── 0ac89da31c4f9249523f94305541e75a3d850c
+│   │   ├── 0e
+│   │   │   ├── 17939d6c12d183a6620455f0618bae23e63554
+│   │   ├── 13
+│   │   │   ├── 82aaad3bb9db9df016fd52ee083cca13defc67
+│   │   ├── 1b
+│   │   │   ├── 89cd941069fe201840d38aced5e6c61baade2b
+│   │   │   ├── c6e2c1a5e2c2e0d0961e39d79e9cd11d3df1fe
+│   │   ├── 1c
+│   │   │   ├── d6e24de0b8aa0601d2251fb4572340d12c5a81
+│   │   ├── 20
+│   │   │   ├── 05ef7aeaf88aaa2b87feaa98743b0205fbc936
+│   │   ├── 21
+│   │   │   ├── 6ea38cf61311d2a1706cc7be96a4d5769c3f09
+│   │   ├── 23
+│   │   │   ├── d94057b45c408666ff68e519b5b921b1d549e8
+│   │   ├── 25
+│   │   │   ├── f31f4d34b30ad2ffd473e44628969076ac7aec
+│   │   ├── 2b
+│   │   │   ├── 990c98a8d9a7f69185c15a79775913a4d6468e
+│   │   ├── 2c
+│   │   │   ├── df692a78d1c3db3155b2d47e83bc173c3c30ca
+│   │   ├── 2f
+│   │   │   ├── ce827e4e2ee5ce2e14795087335394c47d2ff3
+│   │   ├── 31
+│   │   │   ├── f9af5cbb30860481162f59a0e8ec4086d221db
+│   │   ├── 32
+│   │   │   ├── d0c1b8c0fd3d36f696cab559f5e87b1aeda099
+│   │   ├── 34
+│   │   │   ├── f74857d8c9745192f9b580a26f173af4179332
+│   │   ├── 47
+│   │   │   ├── 6b20c9db9a346e23ea6029e350ec41ffcc10be
+│   │   ├── 4d
+│   │   │   ├── 7575092a12e5cfee032d00287e3d0e63af88e5
+│   │   ├── 50
+│   │   │   ├── 08ddfcf53c02e82d7eee2e57c38e5672ef89f6
+│   │   ├── 57
+│   │   │   ├── e15230445f804046ba31f97bddc5e8095fc404
+│   │   ├── 5d
+│   │   │   ├── 79d9d756470831f11ccabc4586352346e05be0
+│   │   ├── 60
+│   │   │   ├── 37851d02e6eec4521e0882f1d55a1f843ed264
+│   │   ├── 61
+│   │   │   ├── ca1e22cb08be4ee604932c1d3b05e3eb7c2780
+│   │   ├── 63
+│   │   │   ├── e2e6bfa43b911e8b7244d4261185a10ba14e20
+│   │   ├── 64
+│   │   │   ├── 0068966b665c1482cbc48373429f7504c3b39e
+│   │   ├── 68
+│   │   │   ├── 1af8a6a86a3dda9a57017b926b13844f71cd46
+│   │   │   ├── bc17f9ff2104a9d7b6777058bb4c343ca72609
+│   │   ├── 6c
+│   │   │   ├── 101b27e4f17a4b5a7e4546f5dc7bcbecf24eab
+│   │   ├── 72
+│   │   │   ├── f59df527f346f5c65a40c9d1c7c3c824eb0466
+│   │   ├── 73
+│   │   │   ├── f745012cddbb7366426345987007ab115ea522
+│   │   ├── 74
+│   │   │   ├── ea909291e5ea2ffdcd23fba9d5ae00eaa3e13d
+│   │   ├── 7d
+│   │   │   ├── 5905d0f77357852153b01df3496dfc05356137
+│   │   ├── 7f
+│   │   │   ├── d26b970b848120ad4f6ab398e1864ab0111e60
+│   │   ├── 87
+│   │   │   ├── 976c56b5f5b95e340734012698e6e3cc426804
+│   │   ├── 88
+│   │   │   ├── c89b512084b08064e37fba4eb52152fd83f1cc
+│   │   ├── 8c
+│   │   │   ├── 94c2ccc1119567056a3fe97b6b57be64d6bae8
+│   │   │   ├── dbb55dec22c7c30be0ea5992b1f3d5f9267d76
+│   │   ├── 8e
+│   │   │   ├── af0342800bf87880dbd474ad6b1df3a66c836e
+│   │   ├── 90
+│   │   │   ├── 467aee84d384ee53d12d7057a07b384220eb50
+│   │   ├── 93
+│   │   │   ├── 5a7323e730b90a60f2c53b33e4a3a518aa5512
+│   │   ├── 99
+│   │   │   ├── 72d79a886ef4eb2eb5c58b86348078782cbe0a
+│   │   ├── 9e
+│   │   │   ├── 0ed9d8fe4c8a8ad5876b9f03552ff60bf161d7
+│   │   ├── a0
+│   │   │   ├── 593d100a823776a570c7011136a484d7ae3d8a
+│   │   ├── a5
+│   │   │   ├── e783470055d055620082d30c4ffacb5f1c9699
+│   │   ├── a7
+│   │   │   ├── 49d1103669fcf0280ff50c04ca5c38815f7779
+│   │   ├── a9
+│   │   │   ├── 83cd98285508079e3fdc2c9c21530a6fe3c8e4
+│   │   ├── ad
+│   │   │   ├── 4a8a1bfde71616842234629a17c3521e605c37
+│   │   ├── af
+│   │   │   ├── 19539c818544c9f9ab7ba6d90a9548c673b688
+│   │   ├── b1
+│   │   │   ├── d8aa01585d4c4de24dfd370a4d7ac43e58a5fc
+│   │   ├── b4
+│   │   │   ├── 03e500981c340293fba49aae02a916677de00e
+│   │   ├── b8
+│   │   │   ├── 221899ea6d1759a8ea560281d726d172f2a195
+│   │   │   ├── 315ae97871afd62987c5f36c59afce7592a981
+│   │   ├── ba
+│   │   │   ├── 7a69a7e42c7313a6de0d423e9bf8421060b024
+│   │   ├── bc
+│   │   │   ├── 0d6b21d69ed5268efbce2e2f09f1b95664292d
+│   │   ├── c6
+│   │   │   ├── c1fc29c9ec99b646d01159a06f67117fe08d6c
+│   │   ├── d3
+│   │   │   ├── 150a428aea259ea05d9c2d604eb7b8d9110730
+│   │   ├── d8
+│   │   │   ├── a4af5d681f47ef2652901f3cdd7872f6b1df89
+│   │   ├── db
+│   │   │   ├── 4f4ba6de9cd092f1136bbb0f95a7c16eea4009
+│   │   ├── dd
+│   │   │   ├── 0ee9f660b276e9bd816f7c7de74866bf76f8bc
+│   │   ├── df
+│   │   │   ├── e0770424b2a19faf507a501ebfc23be8f54e7b
+│   │   ├── e2
+│   │   │   ├── b972525a00a10695f18e87466660712dda0bd9
+│   │   ├── e5
+│   │   │   ├── 5f2c728e1473b8d7bb699cbe838f26cae3a3a4
+│   │   ├── f4
+│   │   │   ├── 9d9a27e32792c5a5ca3333fbfd078ed2ed7b59
+│   │   ├── fe
+│   │   │   ├── b4b48e13fe546fa6a1f4927106098e6e229118
+│   │   ├── info
+│   │   ├── pack
+│   ├── refs
+│   │   ├── heads
+│   │   │   ├── main
+│   │   ├── remotes
+│   │   │   ├── origin
+│   │   │   │   ├── HEAD
+│   │   │   │   ├── main
+│   │   ├── tags
+├── .gitattributes
+├── .gitignore
+├── README.md
 ├── config
 │   ├── agents
 │   │   ├── .DS_Store
@@ -28,12 +206,17 @@ You are in charge of the 'tangent' python package and the development of project
 │   │   ├── applescript_tool.py
 │   │   ├── database_tool.py
 │   │   ├── terminal_tool.py
-├── database
-│   ├── __pycache__
-│   │   ├── postgres.cpython-311.pyc
-│   ├── postgres.py
-│   ├── test_connection.py
+├── docs
+│   ├── creating_agents.md
+│   ├── embeddings.md
+│   ├── function_calls.md
+├── examples
+│   ├── research_agent.py
+│   ├── websearch_agent.py
 ├── main.py
+├── my-docs
+├── pyproject.toml
+├── setup.cfg
 ├── tangent
 │   ├── __init__.py
 │   ├── __pycache__
@@ -83,9 +266,9 @@ def __init__(self, client=None):
 - The `tangent` class can be initialized with an optional OpenAI client.  
 - If no client is provided, it creates a default OpenAI client instance.
 
-# Tangent Python Library Documentation
+# tangent Python Library Documentation
 
-Welcome to the **Tangent** Python library documentation. **Tangent** is a high-level framework designed to facilitate conversational interactions and tool/agent orchestration using OpenAI-based Large Language Models (LLMs). This documentation provides a comprehensive guide on how to install, configure, and use **Tangent**, with detailed API references for each module, class, and function.
+Welcome to the **tangent** Python library documentation. **tangent** is a high-level framework designed to facilitate conversational interactions and tool/agent orchestration using OpenAI-based Large Language Models (LLMs). This documentation provides a comprehensive guide on how to install, configure, and use **tangent**, with detailed API references for each module, class, and function.
 
 ---
 
@@ -109,7 +292,7 @@ Welcome to the **Tangent** Python library documentation. **Tangent** is a high-l
 
 ## Overview
 
-**Tangent** provides:
+**tangent** provides:
 
 - A flexible `Agent` abstraction for describing how an AI assistant interacts with a user or environment.
 - Utility methods to handle **tool calls** (function calls) automatically invoked by the AI.
@@ -117,7 +300,7 @@ Welcome to the **Tangent** Python library documentation. **Tangent** is a high-l
 - A simple REPL (Read-Eval-Print Loop) interface for interactive experimentation.
 - Integration with [OpenAI Python bindings](https://github.com/openai/openai-python).
 
-At its core, **Tangent** handles:
+At its core, **tangent** handles:
 1. Sending chat history (messages) along with instructions to the LLM (OpenAI).
 2. Optionally handling function calls (tools) that the LLM requests to execute.
 3. Managing context variables across multiple chat turns.
@@ -127,7 +310,7 @@ At its core, **Tangent** handles:
 
 ## Installation
 
-Because this documentation is based solely on the code provided (and does not specify a distribution method), you can install **Tangent** in one of two ways:
+Because this documentation is based solely on the code provided (and does not specify a distribution method), you can install **tangent** in one of two ways:
 
 1. **Cloning the Repository**  
    Clone the repository containing the `tangent/` package into your local environment. Then install the package via:
@@ -153,7 +336,7 @@ pip install openai pydantic
 
 ## Quick Start Example
 
-Below is a simple example showing how to use the **Tangent** library to run an interactive loop with an `Agent`:
+Below is a simple example showing how to use the **tangent** library to run an interactive loop with an `Agent`:
 
 ```python
 from tangent import Agent, tangent
@@ -443,10 +626,10 @@ A high-level method to manage conversation flow with optional streaming.
 #### 3.1 `tangent/repl/__init__.py`
 
 ```python
-from .repl import run_demo_loop
+from .repl import run_tangent_loop
 ```
 
-Exports the `run_demo_loop` function, which is a handy method for an interactive CLI demo.
+Exports the `run_tangent_loop` function, which is a handy method for an interactive CLI demo.
 
 #### 3.2 `tangent/repl/repl.py`
 
@@ -468,7 +651,7 @@ Key functionalities:
        ...
    ```
 
-3. **`run_demo_loop(starting_agent, context_variables=None, stream=False, debug=False) -> None`**  
+3. **`run_tangent_loop(starting_agent, context_variables=None, stream=False, debug=False) -> None`**  
    Runs an interactive command-line loop:
    - Prompts user input
    - Appends it to a conversation history
@@ -477,7 +660,7 @@ Key functionalities:
    - Updates the conversation state and repeats until termination
 
    ```python
-   def run_demo_loop(
+   def run_tangent_loop(
        starting_agent, context_variables=None, stream=False, debug=False
    ) -> None:
        ...
@@ -657,14 +840,14 @@ postgresql://tan@localhost:5432/postgres
 
 ## Additional Notes
 
-- **Context Variable Handling**: If you wish to pass additional data from one conversation turn to the next (e.g., user preferences, session data, etc.), you can store them in `context_variables`. **Tangent** automatically provides them to your tools that declare `context_variables` in their function signature.
-- **Streaming vs. Non-streaming**: When setting `stream=True` in the `run(...)` method, **Tangent** yields partial tokens as they arrive from the LLM. You can consume these tokens one at a time to build interactive UIs or real-time displays.
+- **Context Variable Handling**: If you wish to pass additional data from one conversation turn to the next (e.g., user preferences, session data, etc.), you can store them in `context_variables`. **tangent** automatically provides them to your tools that declare `context_variables` in their function signature.
+- **Streaming vs. Non-streaming**: When setting `stream=True` in the `run(...)` method, **tangent** yields partial tokens as they arrive from the LLM. You can consume these tokens one at a time to build interactive UIs or real-time displays.
 - **Switching Agents**: A tool can return a `Result` with an `.agent` field, effectively switching to a new agent mid-conversation.
-- **Debugging**: Set `debug=True` in `run(...)` or `run_and_stream(...)` to see debug logs from **Tangent**, including messages sent to the LLM, tool calls, and partial tokens.
+- **Debugging**: Set `debug=True` in `run(...)` or `run_and_stream(...)` to see debug logs from **tangent**, including messages sent to the LLM, tool calls, and partial tokens.
 
 ## Conclusion
 
-**Tangent** is a straightforward yet flexible library for orchestrating multi-step conversations with LLMs, especially when function calls (tools) are involved. It provides:
+**tangent** is a straightforward yet flexible library for orchestrating multi-step conversations with LLMs, especially when function calls (tools) are involved. It provides:
 - Clear abstractions for an `Agent`’s instructions and available functions.
 - Automatic management of tool calls requested by the model.
 - Streaming or one-shot conversation flows.
