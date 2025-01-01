@@ -62,4 +62,4 @@ def run_web_search_conversation(query: str, context_variables: dict = None):
 if __name__ == "__main__":
     from tangent.repl import run_tangent_loop
     # Run the interactive demo loop
-    run_tangent_loop(web_search_agent, stream=True, debug=True)
+    run_tangent_loop(web_search_agent, stream=True, debug=False)
