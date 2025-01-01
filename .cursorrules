@@ -202,7 +202,6 @@ The combination of embeddings and knowledge base creates a powerful system for a
 ├── .cursorignore
 ├── .cursorrules
 ├── .env
-├── .gitattributes
 ├── .gitignore
 ├── README.md
 ├── config
@@ -222,11 +221,13 @@ The combination of embeddings and knowledge base creates a powerful system for a
 │   ├── embeddings.md
 │   ├── function_calls.md
 │   ├── triage_template.md
+│   ├── types_index.md
 ├── document_storage
 │   ├── 0e4f6976-1ce1-46f9-9ae0-64ab5a27bbc0.json
 │   ├── a5048f2c-7399-47c6-b721-7e93affa9648.json
 ├── examples
 │   ├── embedding_agent.py
+│   ├── triage_agent.py
 │   ├── websearch_agent.py
 ├── main.py
 ├── my-docs
@@ -242,6 +243,10 @@ The combination of embeddings and knowledge base creates a powerful system for a
 │   │   ├── repl.py
 │   ├── tools
 │   │   ├── knowledge_base.py
+│   ├── triage
+│   │   ├── __init__.py
+│   │   ├── agent.py
+│   │   ├── utils.py
 │   ├── types.py
 │   ├── util.py
 ├── test_documents

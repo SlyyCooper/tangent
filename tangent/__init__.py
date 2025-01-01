@@ -1,32 +1,14 @@
 from .core import tangent
-from .types import (
-    Agent,
-    Response,
-    Result,
-    Document,
-    DocumentChunk,
-    EmbeddingConfig,
-    VectorDBConfig,
-    QdrantConfig,
-    PineconeConfig,
-    CustomVectorDBConfig
-)
-from .embeddings import EmbeddingManager
+from .types import Agent, Response, Result
 from .repl import run_tangent_loop, process_and_print_streaming_response
+from .triage import create_triage_agent
 
 __all__ = [
     "tangent",
     "Agent",
     "Response",
     "Result",
-    "Document",
-    "DocumentChunk",
-    "EmbeddingConfig",
-    "VectorDBConfig",
-    "QdrantConfig",
-    "PineconeConfig",
-    "CustomVectorDBConfig",
-    "EmbeddingManager",
     "run_tangent_loop",
-    "process_and_print_streaming_response"
+    "process_and_print_streaming_response",
+    "create_triage_agent"
 ]

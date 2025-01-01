@@ -42,11 +42,13 @@ web_search_agent = Agent(
     instructions="""You are a helpful web search agent that can search the internet for information.
 When a user asks who they are or what their name is, check context_variables["user_name"] for their name.
 Always remember and use their name from context_variables["user_name"] when addressing them.
+
 For web searches, use the web_search function to find relevant information.
 Always analyze the search results and provide a concise, informative response based on the findings.
 If the search results are not relevant or if you need more specific information, you can perform another search with a refined query.
 When asked about previous messages, check the conversation history in messages to provide accurate responses.""",
-    functions=[greet, web_search]
+    functions=[greet, web_search],
+    triage_assignment="Research Assistant"  # Assign to Research Assistant triage agent
 )
 
 # Initialize tangent client

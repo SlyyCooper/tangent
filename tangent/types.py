@@ -76,6 +76,7 @@ class Agent(BaseModel):
     functions: List[AgentFunction] = []
     tool_choice: str = None
     parallel_tool_calls: bool = True
+    triage_assignment: Optional[str] = Field(None, description="Name of the triage agent this agent is assigned to")
     
     # Embedding fields with proper type annotations using string literals
     embedding_config: Optional[str] = Field(None, description="EmbeddingConfig")

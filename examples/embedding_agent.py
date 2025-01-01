@@ -2,10 +2,15 @@ from tangent import Agent, tangent
 from tangent.types import Result, QdrantConfig, EmbeddingConfig
 from tangent.embeddings import DocumentStore
 from typing import List
+import os
+
+# Get the absolute path to test_documents directory
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+docs_path = os.path.join(base_dir, "test_documents", "articles")
 
 # Initialize document store with configuration
 doc_store = DocumentStore(
-    documents_path="test_documents/articles",
+    documents_path=docs_path,
     config=EmbeddingConfig(
         model="text-embedding-3-large",
         chunk_size=500,
@@ -55,7 +60,8 @@ Remember:
 - Share specific details from the documents
 - Don't mention searching or processing
 - Respond as if you already know all the content""",
-    functions=[search_documents]
+    functions=[search_documents],
+    triage_assignment="Research Assistant"
 )
 
 if __name__ == "__main__":
