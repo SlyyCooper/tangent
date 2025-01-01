@@ -4,9 +4,9 @@ from openai.types.chat.chat_completion_message_tool_call import (
     Function,
 )
 from typing import List, Callable, Union, Optional
-
-# Third-party imports
 from pydantic import BaseModel
+
+from .embeddings import EmbeddingConfig, EmbeddingManager, Document
 
 AgentFunction = Callable[[], Union[str, "Agent", dict]]
 
@@ -18,6 +18,39 @@ class Agent(BaseModel):
     functions: List[AgentFunction] = []
     tool_choice: str = None
     parallel_tool_calls: bool = True
+    
+    # New embedding fields
+    embedding_config: Optional[EmbeddingConfig] = None
+    _embedding_manager: Optional[EmbeddingManager] = None
+    
+    def setup_embeddings(self, config: EmbeddingConfig):
+        """Initialize embedding support for this agent."""
+        self.embedding_config = config
+        self._embedding_manager = EmbeddingManager(config)
+        return self
+    
+    def load_knowledge_base(self, source: str, path: str):
+        """Load and embed documents for the agent's knowledge base."""
+        if not self._embedding_manager:
+            raise ValueError("Embeddings not configured. Call setup_embeddings first.")
+            
+        # Load documents
+        documents = self._embedding_manager.load_documents(source, path)
+        
+        # Create embeddings
+        documents = self._embedding_manager.create_embeddings(documents)
+        
+        # Store in vector database
+        self._embedding_manager.store_documents(documents)
+        
+        return self
+    
+    def search_knowledge_base(self, query: str, top_k: int = 5) -> List[Document]:
+        """Search the agent's knowledge base."""
+        if not self._embedding_manager:
+            raise ValueError("Embeddings not configured. Call setup_embeddings first.")
+            
+        return self._embedding_manager.search(query, top_k)
 
 
 class Response(BaseModel):

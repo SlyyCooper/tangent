@@ -1,0 +1,10 @@
+{
+    "title": "Brief History of Artificial Intelligence",
+    "content": "Artificial Intelligence has evolved significantly since its inception in the 1950s. The field began with the Dartmouth Conference in 1956, where the term 'Artificial Intelligence' was first coined. Early AI focused on general problem solving and symbolic methods.\n\nIn the 1960s, researchers developed natural language processing systems. The 1970s saw the emergence of expert systems, while the 1980s brought neural networks into prominence. However, two 'AI winters' occurred when funding and interest decreased.\n\nThe 2010s marked a revolutionary period with the rise of deep learning and transformer models. Key milestones include:\n- 2011: IBM Watson wins Jeopardy!\n- 2012: Deep learning breakthrough in image recognition\n- 2017: AlphaGo defeats world champion at Go\n- 2018: BERT transforms NLP\n- 2022: ChatGPT demonstrates remarkable conversational abilities\n\nToday, AI systems can perform tasks ranging from autonomous driving to medical diagnosis, creative writing, and scientific research.",
+    "metadata": {
+        "category": "technology",
+        "author": "AI Research Team",
+        "date": "2024",
+        "topics": ["AI history", "machine learning", "deep learning", "neural networks"]
+    }
+} 

@@ -8,7 +8,6 @@ You are in charge of the 'tangent' python package and the development of project
 ├── .cursorrules
 ├── .env
 ├── .git
-│   ├── AUTO_MERGE
 │   ├── COMMIT_EDITMSG
 │   ├── FETCH_HEAD
 │   ├── HEAD
@@ -58,6 +57,8 @@ You are in charge of the 'tangent' python package and the development of project
 │   │   │   ├── c6e2c1a5e2c2e0d0961e39d79e9cd11d3df1fe
 │   │   ├── 1c
 │   │   │   ├── d6e24de0b8aa0601d2251fb4572340d12c5a81
+│   │   ├── 1d
+│   │   │   ├── 4e880deef1732361a79597f108e7471b869cf5
 │   │   ├── 20
 │   │   │   ├── 05ef7aeaf88aaa2b87feaa98743b0205fbc936
 │   │   ├── 21
@@ -78,6 +79,8 @@ You are in charge of the 'tangent' python package and the development of project
 │   │   │   ├── d0c1b8c0fd3d36f696cab559f5e87b1aeda099
 │   │   ├── 34
 │   │   │   ├── f74857d8c9745192f9b580a26f173af4179332
+│   │   ├── 36
+│   │   │   ├── fcf65409a3f73f02fceea59a45c812a6c14b04
 │   │   ├── 47
 │   │   │   ├── 6b20c9db9a346e23ea6029e350ec41ffcc10be
 │   │   ├── 4d
@@ -86,7 +89,10 @@ You are in charge of the 'tangent' python package and the development of project
 │   │   │   ├── 08ddfcf53c02e82d7eee2e57c38e5672ef89f6
 │   │   ├── 57
 │   │   │   ├── e15230445f804046ba31f97bddc5e8095fc404
+│   │   ├── 59
+│   │   │   ├── d8c4ce0c6d6014d07dd3759594bced6103edf1
 │   │   ├── 5d
+│   │   │   ├── 5b66e749a6a5b33c6dcbce9eed2041adb66bf2
 │   │   │   ├── 79d9d756470831f11ccabc4586352346e05be0
 │   │   ├── 60
 │   │   │   ├── 37851d02e6eec4521e0882f1d55a1f843ed264
@@ -107,19 +113,27 @@ You are in charge of the 'tangent' python package and the development of project
 │   │   │   ├── f745012cddbb7366426345987007ab115ea522
 │   │   ├── 74
 │   │   │   ├── ea909291e5ea2ffdcd23fba9d5ae00eaa3e13d
+│   │   ├── 7b
+│   │   │   ├── 3d657529ebff751b3b28294dfbcc4812878220
 │   │   ├── 7d
 │   │   │   ├── 5905d0f77357852153b01df3496dfc05356137
 │   │   ├── 7f
 │   │   │   ├── d26b970b848120ad4f6ab398e1864ab0111e60
+│   │   ├── 83
+│   │   │   ├── f890b53affce860cf82cd79c7d9da6030c2a5a
 │   │   ├── 87
 │   │   │   ├── 976c56b5f5b95e340734012698e6e3cc426804
+│   │   │   ├── c9bff7353c7b7674ca43a7bc76193344407ff5
 │   │   ├── 88
 │   │   │   ├── c89b512084b08064e37fba4eb52152fd83f1cc
 │   │   ├── 8c
 │   │   │   ├── 94c2ccc1119567056a3fe97b6b57be64d6bae8
 │   │   │   ├── dbb55dec22c7c30be0ea5992b1f3d5f9267d76
 │   │   ├── 8e
+│   │   │   ├── 735c527f4ae9fa1f07cdb1bd10a79f816f4a1f
 │   │   │   ├── af0342800bf87880dbd474ad6b1df3a66c836e
+│   │   ├── 8f
+│   │   │   ├── e84f5f077c0cd78db34a29ed33f9ab4df6a317
 │   │   ├── 90
 │   │   │   ├── 467aee84d384ee53d12d7057a07b384220eb50
 │   │   ├── 93
@@ -130,18 +144,24 @@ You are in charge of the 'tangent' python package and the development of project
 │   │   │   ├── 0ed9d8fe4c8a8ad5876b9f03552ff60bf161d7
 │   │   ├── a0
 │   │   │   ├── 593d100a823776a570c7011136a484d7ae3d8a
+│   │   ├── a1
+│   │   │   ├── dba68ad5f5b75e2748e4b5b9634860de8c890a
 │   │   ├── a5
+│   │   │   ├── 2b59e817099e6eceefd016a845113d9e2a36dc
 │   │   │   ├── e783470055d055620082d30c4ffacb5f1c9699
 │   │   ├── a7
 │   │   │   ├── 49d1103669fcf0280ff50c04ca5c38815f7779
 │   │   ├── a9
 │   │   │   ├── 83cd98285508079e3fdc2c9c21530a6fe3c8e4
+│   │   │   ├── b9039f0e9ebf0b965cc01a35ab8edfb90686c7
 │   │   ├── ad
 │   │   │   ├── 4a8a1bfde71616842234629a17c3521e605c37
 │   │   ├── af
 │   │   │   ├── 19539c818544c9f9ab7ba6d90a9548c673b688
 │   │   ├── b1
 │   │   │   ├── d8aa01585d4c4de24dfd370a4d7ac43e58a5fc
+│   │   ├── b2
+│   │   │   ├── 399108190c85b91429a727c658e14c7a3f01dd
 │   │   ├── b4
 │   │   │   ├── 03e500981c340293fba49aae02a916677de00e
 │   │   ├── b8
@@ -151,6 +171,10 @@ You are in charge of the 'tangent' python package and the development of project
 │   │   │   ├── 7a69a7e42c7313a6de0d423e9bf8421060b024
 │   │   ├── bc
 │   │   │   ├── 0d6b21d69ed5268efbce2e2f09f1b95664292d
+│   │   ├── c4
+│   │   │   ├── 04a186d7466c7cb7ada4e40c3daf9e0f80a589
+│   │   ├── c5
+│   │   │   ├── f3b9d1da2805a070d9d4a3e19daafb7daa1f0b
 │   │   ├── c6
 │   │   │   ├── c1fc29c9ec99b646d01159a06f67117fe08d6c
 │   │   ├── d3
@@ -167,10 +191,15 @@ You are in charge of the 'tangent' python package and the development of project
 │   │   │   ├── b972525a00a10695f18e87466660712dda0bd9
 │   │   ├── e5
 │   │   │   ├── 5f2c728e1473b8d7bb699cbe838f26cae3a3a4
+│   │   ├── f2
+│   │   │   ├── 8553f04a51638f3f82a218d2e937025485d5e0
 │   │   ├── f4
 │   │   │   ├── 9d9a27e32792c5a5ca3333fbfd078ed2ed7b59
 │   │   ├── fe
 │   │   │   ├── b4b48e13fe546fa6a1f4927106098e6e229118
+│   │   ├── ff
+│   │   │   ├── 2664cc5c2a110ce2da606d7b89f3207ce85523
+│   │   │   ├── f10c61cc38c7e07b2a5ffb0566c602dd394cf9
 │   │   ├── info
 │   │   ├── pack
 │   ├── refs
@@ -184,6 +213,7 @@ You are in charge of the 'tangent' python package and the development of project
 ├── .gitattributes
 ├── .gitignore
 ├── README.md
+├── codebase_snapshot.md
 ├── config
 │   ├── agents
 │   │   ├── .DS_Store
@@ -211,10 +241,11 @@ You are in charge of the 'tangent' python package and the development of project
 │   ├── embeddings.md
 │   ├── function_calls.md
 ├── examples
-│   ├── research_agent.py
+│   ├── embedding_agent.py
 │   ├── websearch_agent.py
 ├── main.py
 ├── my-docs
+│   ├── tangent_python_library.md
 ├── pyproject.toml
 ├── setup.cfg
 ├── tangent
@@ -222,17 +253,28 @@ You are in charge of the 'tangent' python package and the development of project
 │   ├── __pycache__
 │   │   ├── __init__.cpython-311.pyc
 │   │   ├── core.cpython-311.pyc
+│   │   ├── embeddings.cpython-311.pyc
 │   │   ├── types.cpython-311.pyc
 │   │   ├── util.cpython-311.pyc
 │   ├── core.py
+│   ├── embeddings.py
 │   ├── repl
 │   │   ├── __init__.py
 │   │   ├── __pycache__
 │   │   │   ├── __init__.cpython-311.pyc
 │   │   │   ├── repl.cpython-311.pyc
 │   │   ├── repl.py
+│   ├── tools
+│   │   ├── knowledge_base.py
 │   ├── types.py
 │   ├── util.py
+├── tangent.egg-info
+│   ├── PKG-INFO
+│   ├── SOURCES.txt
+│   ├── dependency_links.txt
+│   ├── requires.txt
+│   ├── top_level.txt
+│   ├── zip-safe
 </tree_structure>
 
 **IMPORTANT**
