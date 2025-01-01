@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Dict, Literal
+from typing import List, Optional, Union
 from pathlib import Path
 import json
 import os
@@ -6,75 +6,28 @@ import uuid
 import markdown
 import docx
 import PyPDF2
-from dataclasses import dataclass
-
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
-from pydantic import BaseModel, Field
 
-# Known vector sizes for embedding models
+# Import types from types.py
+from .types import (
+    Document,
+    DocumentChunk,
+    EmbeddingConfig,
+    VectorDBConfig,
+    QdrantConfig,
+    PineconeConfig,
+    CustomVectorDBConfig
+)
+
+# Keep the EMBEDDING_DIMENSIONS constant
 EMBEDDING_DIMENSIONS = {
     "text-embedding-3-large": 3072,
     "text-embedding-3-small": 1536,
 }
 
-@dataclass
-class DocumentChunk:
-    """A chunk of text from a document with its metadata."""
-    text: str
-    metadata: dict
-    source_file: str
-    chunk_index: int = 0
-
-class Document(BaseModel):
-    """Represents a document with its text and metadata."""
-    id: str
-    text: str
-    metadata: dict = {}
-    embedding: Optional[List[float]] = None
-
-class VectorDBConfig(BaseModel):
-    """Base configuration for vector databases."""
-    type: Literal["qdrant", "pinecone", "custom"] = "qdrant"
-    collection_name: str = "default"
-
-class QdrantConfig(VectorDBConfig):
-    """Qdrant-specific configuration."""
-    type: Literal["qdrant"] = "qdrant"
-    url: str = "localhost"
-    port: int = 6333
-    api_key: Optional[str] = None
-
-class PineconeConfig(VectorDBConfig):
-    """Pinecone-specific configuration."""
-    type: Literal["pinecone"] = "pinecone"
-    api_key: str
-    environment: str
-    index_name: str
-
-class CustomVectorDBConfig(VectorDBConfig):
-    """Configuration for custom vector database implementations."""
-    type: Literal["custom"] = "custom"
-    connection_params: dict = {}
-
-class EmbeddingConfig(BaseModel):
-    """Configuration for embedding functionality."""
-    # Embedding model settings
-    model: str = "text-embedding-3-large"
-    chunk_size: int = 500
-    chunk_overlap: int = 50
-    batch_size: int = 100
-    
-    # Vector database settings
-    vector_db: Union[QdrantConfig, PineconeConfig, CustomVectorDBConfig] = Field(
-        default_factory=lambda: QdrantConfig(collection_name="default")
-    )
-    
-    # Document processing settings
-    supported_extensions: List[str] = [".txt", ".md", ".pdf", ".docx", ".json"]
-    recreate_collection: bool = False
-
+# Keep only the EmbeddingManager class
 class EmbeddingManager:
     """Manages document loading, embedding creation, and search."""
     

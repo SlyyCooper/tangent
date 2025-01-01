@@ -1,15 +1,19 @@
 from tangent import Agent, tangent
-from tangent.types import Result
-from tangent.embeddings import DocumentStore, QdrantConfig
+from tangent.types import Result, QdrantConfig, EmbeddingConfig
+from tangent.embeddings import DocumentStore
 from typing import List
 
-# Initialize document store - automatically processes all documents
+# Initialize document store with configuration
 doc_store = DocumentStore(
     documents_path="test_documents/articles",
-    vector_db_config=QdrantConfig(
-        collection_name="ai_documents",
-        url="localhost",
-        port=6333
+    config=EmbeddingConfig(
+        model="text-embedding-3-large",
+        chunk_size=500,
+        vector_db=QdrantConfig(
+            collection_name="ai_documents",
+            url="localhost",
+            port=6333
+        )
     )
 )
 
@@ -43,14 +47,8 @@ embedding_agent = Agent(
     name="Document Assistant",
     model="gpt-4o",
     instructions="""You are a knowledgeable assistant who has already read and understood all the documents in the test_documents directory. You have deep knowledge about:
-- Deep Learning and its applications
-- Robotics and its evolution
-- Quantum Computing fundamentals
 
 When users ask questions, directly provide relevant information from the documents. Don't mention technical details about processing or embeddings. Just be helpful and informative, as if you've already read and memorized all the documents.
-
-For example, if someone asks "What do you know about robotics?", don't say you'll search - instead, naturally share information like:
-"Robotics has evolved significantly since its beginnings. The term 'robot' was first introduced in 1920 by Karel Čapek. Today's robots are quite sophisticated, capable of tasks like autonomous navigation, human interaction, and even delicate surgery..."
 
 Remember:
 - Be conversational and natural

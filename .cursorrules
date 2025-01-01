@@ -1,238 +1,219 @@
 You are in charge of the 'tangent' python package and the development of projects using it.
 
+### 1. core.py - The Engine
+`core.py` implements the main orchestration system for AI agent interactions. Here are its key components:
+
+1. **Class: tangent**
+- Main orchestrator that manages conversations with AI agents
+- Handles chat completions, function calls, and conversation state
+- Key methods:
+  - `get_chat_completion`: Sends messages to OpenAI with proper formatting
+  - `handle_function_result`: Processes results from tool calls
+  - `handle_tool_calls`: Executes functions requested by the AI
+  - `run` and `run_and_stream`: Main methods to conduct conversations
+
+The core class supports both streaming and non-streaming modes, manages context variables, and can switch between different agents during a conversation.
+
+### 2. types.py - The Data Models
+`types.py` defines the fundamental data structures using Pydantic models:
+
+1. **Class: Agent**
+```python
+class Agent(BaseModel):
+    name: str = "Agent"
+    model: str = "gpt-4o"
+    instructions: Union[str, Callable[[], str]]
+    functions: List[AgentFunction] = []
+    tool_choice: str = None
+    parallel_tool_calls: bool = True
+    embedding_config: Optional[EmbeddingConfig] = None
+    _embedding_manager: Optional[EmbeddingManager] = None
+```
+- Represents an AI agent with its configuration
+- Supports embeddings for knowledge base functionality
+- Methods for setting up and searching knowledge bases
+
+2. **Class: Response**
+```python
+class Response(BaseModel):
+    messages: List = []
+    agent: Optional[Agent] = None
+    context_variables: dict = {}
+```
+- Encapsulates conversation responses
+- Tracks messages, active agent, and context
+
+3. **Class: Result**
+```python
+class Result(BaseModel):
+    value: str = ""
+    agent: Optional[Agent] = None
+    context_variables: dict = {}
+```
+- Represents the return value from agent functions
+- Can include a new agent for switching context
+- Maintains conversation context variables
+
+The combination of `core.py` and `types.py` creates a flexible system where:
+1. The `Agent` class defines behavior and capabilities
+2. The `tangent` class orchestrates conversations
+3. `Response` and `Result` classes handle data flow
+4. Everything is strongly typed with Pydantic models
+5. The system supports both simple conversations and complex multi-agent interactions with tool calls
+ 
+
+### 1. embeddings.py - Vector Database & Document Management
+This is a sophisticated module that handles document processing, embedding generation, and vector search. Here are its key components:
+
+1. **Core Data Classes:**
+```python
+class DocumentChunk:
+    text: str
+    metadata: dict
+    source_file: str
+    chunk_index: int
+
+class Document(BaseModel):
+    id: str
+    text: str
+    metadata: dict = {}
+    embedding: Optional[List[float]] = None
+```
+
+2. **Configuration Classes:**
+```python
+class EmbeddingConfig(BaseModel):
+    model: str = "text-embedding-3-large"
+    chunk_size: int = 500
+    chunk_overlap: int = 50
+    batch_size: int = 100
+    vector_db: Union[QdrantConfig, PineconeConfig, CustomVectorDBConfig]
+```
+Supports multiple vector databases:
+- Qdrant (default)
+- Pinecone
+- Custom implementations
+
+3. **EmbeddingManager Class:**
+Key functionalities:
+- Document Processing:
+  ```python
+  # Supports multiple formats
+  - .txt (plain text)
+  - .md (markdown)
+  - .pdf (PDF documents)
+  - .docx (Word documents)
+  - .json (JSON with content/metadata)
+  ```
+
+- Embedding Creation:
+  ```python
+  def create_embeddings(self, chunks: List[DocumentChunk]) -> List[Document]:
+      # Batches documents
+      # Creates embeddings using OpenAI
+      # Returns documents with embeddings
+  ```
+
+- Vector Search:
+  ```python
+  def search(self, query: str, top_k: int = 5) -> List[Document]:
+      # Creates query embedding
+      # Searches vector database
+      # Returns similar documents
+  ```
+
+4. **DocumentStore Class:**
+A high-level interface for document management:
+```python
+class DocumentStore:
+    def __init__(self, documents_path: Optional[str] = None, 
+                 auto_process: bool = True):
+        # Automatic document processing
+        # Vector database setup
+```
+
+### 2. knowledge_base.py - Agent Knowledge Integration
+This module bridges the embedding system with agents:
+
+1. **Main Function:**
+```python
+def search_knowledge_base(
+    query: str, 
+    top_k: int = 5, 
+    context_variables: dict = None, 
+    agent: Agent = None
+) -> Result:
+```
+
+Key features:
+- Integrates with agent's embedding manager
+- Returns formatted search results
+- Maintains context through `context_variables`
+- Error handling and graceful degradation
+
+2. **Result Format:**
+```python
+# Success case:
+{
+    "value": "Document: Title\nContent: Text\nRelevance: Score",
+    "context_variables": {
+        "last_search_query": query,
+        "num_results": count
+    }
+}
+
+# Error case:
+{
+    "value": "Error message or 'No results found'",
+    "context_variables": original_context
+}
+```
+
+Together, these modules provide:
+1. **Document Processing Pipeline:**
+   - Load various document formats
+   - Chunk text appropriately
+   - Generate embeddings
+   - Store in vector database
+
+2. **Search Capabilities:**
+   - Semantic search using embeddings
+   - Multiple vector database options
+   - Configurable result count
+
+3. **Agent Integration:**
+   - Agents can have their own knowledge bases
+   - Search results format into conversation context
+   - Error handling and state management
+
+This system allows agents to:
+- Access document-based knowledge
+- Perform semantic search
+- Maintain context across conversations
+- Handle multiple document formats
+- Scale with different vector database backends
+
+The combination of embeddings and knowledge base creates a powerful system for agents to access and utilize document-based knowledge in their conversations.
+
 # Project Structure
 
 <tree_structure>
 .
-├── .DS_Store
+├── .cursorignore
 ├── .cursorrules
 ├── .env
-├── .git
-│   ├── COMMIT_EDITMSG
-│   ├── FETCH_HEAD
-│   ├── HEAD
-│   ├── branches
-│   ├── config
-│   ├── description
-│   ├── hooks
-│   │   ├── applypatch-msg.sample
-│   │   ├── commit-msg.sample
-│   │   ├── fsmonitor-watchman.sample
-│   │   ├── post-update.sample
-│   │   ├── pre-applypatch.sample
-│   │   ├── pre-commit.sample
-│   │   ├── pre-merge-commit.sample
-│   │   ├── pre-push.sample
-│   │   ├── pre-rebase.sample
-│   │   ├── pre-receive.sample
-│   │   ├── prepare-commit-msg.sample
-│   │   ├── push-to-checkout.sample
-│   │   ├── sendemail-validate.sample
-│   │   ├── update.sample
-│   ├── index
-│   ├── info
-│   │   ├── exclude
-│   ├── logs
-│   │   ├── HEAD
-│   │   ├── refs
-│   │   │   ├── heads
-│   │   │   │   ├── main
-│   │   │   ├── remotes
-│   │   │   │   ├── origin
-│   │   │   │   │   ├── HEAD
-│   │   │   │   │   ├── main
-│   ├── objects
-│   │   ├── 02
-│   │   │   ├── 79c5372371a0481d541378f0956b5670e992a9
-│   │   ├── 09
-│   │   │   ├── 1c5e7dc1b2a2cb36e6cb456752f39f8a6f882b
-│   │   ├── 0b
-│   │   │   ├── 0ac89da31c4f9249523f94305541e75a3d850c
-│   │   ├── 0e
-│   │   │   ├── 17939d6c12d183a6620455f0618bae23e63554
-│   │   ├── 13
-│   │   │   ├── 82aaad3bb9db9df016fd52ee083cca13defc67
-│   │   ├── 1b
-│   │   │   ├── 89cd941069fe201840d38aced5e6c61baade2b
-│   │   │   ├── c6e2c1a5e2c2e0d0961e39d79e9cd11d3df1fe
-│   │   ├── 1c
-│   │   │   ├── d6e24de0b8aa0601d2251fb4572340d12c5a81
-│   │   ├── 1d
-│   │   │   ├── 4e880deef1732361a79597f108e7471b869cf5
-│   │   ├── 20
-│   │   │   ├── 05ef7aeaf88aaa2b87feaa98743b0205fbc936
-│   │   ├── 21
-│   │   │   ├── 6ea38cf61311d2a1706cc7be96a4d5769c3f09
-│   │   ├── 23
-│   │   │   ├── d94057b45c408666ff68e519b5b921b1d549e8
-│   │   ├── 25
-│   │   │   ├── f31f4d34b30ad2ffd473e44628969076ac7aec
-│   │   ├── 2b
-│   │   │   ├── 990c98a8d9a7f69185c15a79775913a4d6468e
-│   │   ├── 2c
-│   │   │   ├── df692a78d1c3db3155b2d47e83bc173c3c30ca
-│   │   ├── 2f
-│   │   │   ├── ce827e4e2ee5ce2e14795087335394c47d2ff3
-│   │   ├── 31
-│   │   │   ├── f9af5cbb30860481162f59a0e8ec4086d221db
-│   │   ├── 32
-│   │   │   ├── d0c1b8c0fd3d36f696cab559f5e87b1aeda099
-│   │   ├── 34
-│   │   │   ├── f74857d8c9745192f9b580a26f173af4179332
-│   │   ├── 36
-│   │   │   ├── fcf65409a3f73f02fceea59a45c812a6c14b04
-│   │   ├── 47
-│   │   │   ├── 6b20c9db9a346e23ea6029e350ec41ffcc10be
-│   │   ├── 4d
-│   │   │   ├── 7575092a12e5cfee032d00287e3d0e63af88e5
-│   │   ├── 50
-│   │   │   ├── 08ddfcf53c02e82d7eee2e57c38e5672ef89f6
-│   │   ├── 57
-│   │   │   ├── e15230445f804046ba31f97bddc5e8095fc404
-│   │   ├── 59
-│   │   │   ├── d8c4ce0c6d6014d07dd3759594bced6103edf1
-│   │   ├── 5d
-│   │   │   ├── 5b66e749a6a5b33c6dcbce9eed2041adb66bf2
-│   │   │   ├── 79d9d756470831f11ccabc4586352346e05be0
-│   │   ├── 60
-│   │   │   ├── 37851d02e6eec4521e0882f1d55a1f843ed264
-│   │   ├── 61
-│   │   │   ├── ca1e22cb08be4ee604932c1d3b05e3eb7c2780
-│   │   ├── 63
-│   │   │   ├── e2e6bfa43b911e8b7244d4261185a10ba14e20
-│   │   ├── 64
-│   │   │   ├── 0068966b665c1482cbc48373429f7504c3b39e
-│   │   ├── 68
-│   │   │   ├── 1af8a6a86a3dda9a57017b926b13844f71cd46
-│   │   │   ├── bc17f9ff2104a9d7b6777058bb4c343ca72609
-│   │   ├── 6c
-│   │   │   ├── 101b27e4f17a4b5a7e4546f5dc7bcbecf24eab
-│   │   ├── 72
-│   │   │   ├── f59df527f346f5c65a40c9d1c7c3c824eb0466
-│   │   ├── 73
-│   │   │   ├── f745012cddbb7366426345987007ab115ea522
-│   │   ├── 74
-│   │   │   ├── ea909291e5ea2ffdcd23fba9d5ae00eaa3e13d
-│   │   ├── 7b
-│   │   │   ├── 3d657529ebff751b3b28294dfbcc4812878220
-│   │   ├── 7d
-│   │   │   ├── 5905d0f77357852153b01df3496dfc05356137
-│   │   ├── 7f
-│   │   │   ├── d26b970b848120ad4f6ab398e1864ab0111e60
-│   │   ├── 83
-│   │   │   ├── f890b53affce860cf82cd79c7d9da6030c2a5a
-│   │   ├── 87
-│   │   │   ├── 976c56b5f5b95e340734012698e6e3cc426804
-│   │   │   ├── c9bff7353c7b7674ca43a7bc76193344407ff5
-│   │   ├── 88
-│   │   │   ├── c89b512084b08064e37fba4eb52152fd83f1cc
-│   │   ├── 8c
-│   │   │   ├── 94c2ccc1119567056a3fe97b6b57be64d6bae8
-│   │   │   ├── dbb55dec22c7c30be0ea5992b1f3d5f9267d76
-│   │   ├── 8e
-│   │   │   ├── 735c527f4ae9fa1f07cdb1bd10a79f816f4a1f
-│   │   │   ├── af0342800bf87880dbd474ad6b1df3a66c836e
-│   │   ├── 8f
-│   │   │   ├── e84f5f077c0cd78db34a29ed33f9ab4df6a317
-│   │   ├── 90
-│   │   │   ├── 467aee84d384ee53d12d7057a07b384220eb50
-│   │   ├── 93
-│   │   │   ├── 5a7323e730b90a60f2c53b33e4a3a518aa5512
-│   │   ├── 99
-│   │   │   ├── 72d79a886ef4eb2eb5c58b86348078782cbe0a
-│   │   ├── 9e
-│   │   │   ├── 0ed9d8fe4c8a8ad5876b9f03552ff60bf161d7
-│   │   ├── a0
-│   │   │   ├── 593d100a823776a570c7011136a484d7ae3d8a
-│   │   ├── a1
-│   │   │   ├── dba68ad5f5b75e2748e4b5b9634860de8c890a
-│   │   ├── a5
-│   │   │   ├── 2b59e817099e6eceefd016a845113d9e2a36dc
-│   │   │   ├── e783470055d055620082d30c4ffacb5f1c9699
-│   │   ├── a7
-│   │   │   ├── 49d1103669fcf0280ff50c04ca5c38815f7779
-│   │   ├── a9
-│   │   │   ├── 83cd98285508079e3fdc2c9c21530a6fe3c8e4
-│   │   │   ├── b9039f0e9ebf0b965cc01a35ab8edfb90686c7
-│   │   ├── ad
-│   │   │   ├── 4a8a1bfde71616842234629a17c3521e605c37
-│   │   ├── af
-│   │   │   ├── 19539c818544c9f9ab7ba6d90a9548c673b688
-│   │   ├── b1
-│   │   │   ├── d8aa01585d4c4de24dfd370a4d7ac43e58a5fc
-│   │   ├── b2
-│   │   │   ├── 399108190c85b91429a727c658e14c7a3f01dd
-│   │   ├── b4
-│   │   │   ├── 03e500981c340293fba49aae02a916677de00e
-│   │   ├── b8
-│   │   │   ├── 221899ea6d1759a8ea560281d726d172f2a195
-│   │   │   ├── 315ae97871afd62987c5f36c59afce7592a981
-│   │   ├── ba
-│   │   │   ├── 7a69a7e42c7313a6de0d423e9bf8421060b024
-│   │   ├── bc
-│   │   │   ├── 0d6b21d69ed5268efbce2e2f09f1b95664292d
-│   │   ├── c4
-│   │   │   ├── 04a186d7466c7cb7ada4e40c3daf9e0f80a589
-│   │   ├── c5
-│   │   │   ├── f3b9d1da2805a070d9d4a3e19daafb7daa1f0b
-│   │   ├── c6
-│   │   │   ├── c1fc29c9ec99b646d01159a06f67117fe08d6c
-│   │   ├── d3
-│   │   │   ├── 150a428aea259ea05d9c2d604eb7b8d9110730
-│   │   ├── d8
-│   │   │   ├── a4af5d681f47ef2652901f3cdd7872f6b1df89
-│   │   ├── db
-│   │   │   ├── 4f4ba6de9cd092f1136bbb0f95a7c16eea4009
-│   │   ├── dd
-│   │   │   ├── 0ee9f660b276e9bd816f7c7de74866bf76f8bc
-│   │   ├── df
-│   │   │   ├── e0770424b2a19faf507a501ebfc23be8f54e7b
-│   │   ├── e2
-│   │   │   ├── b972525a00a10695f18e87466660712dda0bd9
-│   │   ├── e5
-│   │   │   ├── 5f2c728e1473b8d7bb699cbe838f26cae3a3a4
-│   │   ├── f2
-│   │   │   ├── 8553f04a51638f3f82a218d2e937025485d5e0
-│   │   ├── f4
-│   │   │   ├── 9d9a27e32792c5a5ca3333fbfd078ed2ed7b59
-│   │   ├── fe
-│   │   │   ├── b4b48e13fe546fa6a1f4927106098e6e229118
-│   │   ├── ff
-│   │   │   ├── 2664cc5c2a110ce2da606d7b89f3207ce85523
-│   │   │   ├── f10c61cc38c7e07b2a5ffb0566c602dd394cf9
-│   │   ├── info
-│   │   ├── pack
-│   ├── refs
-│   │   ├── heads
-│   │   │   ├── main
-│   │   ├── remotes
-│   │   │   ├── origin
-│   │   │   │   ├── HEAD
-│   │   │   │   ├── main
-│   │   ├── tags
 ├── .gitattributes
 ├── .gitignore
 ├── README.md
-├── codebase_snapshot.md
 ├── config
 │   ├── agents
-│   │   ├── .DS_Store
 │   │   ├── gateway_agent
 │   │   │   ├── __init__.py
-│   │   │   ├── __pycache__
-│   │   │   │   ├── __init__.cpython-311.pyc
-│   │   │   │   ├── agents.cpython-311.pyc
-│   │   │   │   ├── evals_util.cpython-311.pyc
 │   │   │   ├── agents.py
 │   │   │   ├── evals.py
 │   │   │   ├── evals_util.py
 │   ├── tools
 │   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   ├── __init__.cpython-311.pyc
-│   │   │   ├── applescript_tool.cpython-311.pyc
-│   │   │   ├── database_tool.cpython-311.pyc
-│   │   │   ├── terminal_tool.cpython-311.pyc
 │   │   ├── applescript_tool.py
 │   │   ├── database_tool.py
 │   │   ├── terminal_tool.py
@@ -240,6 +221,10 @@ You are in charge of the 'tangent' python package and the development of project
 │   ├── creating_agents.md
 │   ├── embeddings.md
 │   ├── function_calls.md
+│   ├── triage_template.md
+├── document_storage
+│   ├── 0e4f6976-1ce1-46f9-9ae0-64ab5a27bbc0.json
+│   ├── a5048f2c-7399-47c6-b721-7e93affa9648.json
 ├── examples
 │   ├── embedding_agent.py
 │   ├── websearch_agent.py
@@ -250,31 +235,21 @@ You are in charge of the 'tangent' python package and the development of project
 ├── setup.cfg
 ├── tangent
 │   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── __init__.cpython-311.pyc
-│   │   ├── core.cpython-311.pyc
-│   │   ├── embeddings.cpython-311.pyc
-│   │   ├── types.cpython-311.pyc
-│   │   ├── util.cpython-311.pyc
 │   ├── core.py
 │   ├── embeddings.py
 │   ├── repl
 │   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   ├── __init__.cpython-311.pyc
-│   │   │   ├── repl.cpython-311.pyc
 │   │   ├── repl.py
 │   ├── tools
 │   │   ├── knowledge_base.py
 │   ├── types.py
 │   ├── util.py
-├── tangent.egg-info
-│   ├── PKG-INFO
-│   ├── SOURCES.txt
-│   ├── dependency_links.txt
-│   ├── requires.txt
-│   ├── top_level.txt
-│   ├── zip-safe
+├── test_documents
+│   ├── ai_history.json
+│   ├── articles
+│   │   ├── deep_learning.md
+│   │   ├── quantum_computing.docx
+│   │   ├── robotics.txt
 </tree_structure>
 
 **IMPORTANT**
