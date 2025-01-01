@@ -7,13 +7,13 @@
 Requires Python 3.10+
 
 ```shell
-pip install git+ssh://git@github.com/openai/tangent_agents.git
+pip install git+ssh://git@github.com/SlyyCooper/tangent_agents.git
 ```
 
 or
 
 ```shell
-pip install git+https://github.com/openai/tangent_agents.git
+pip install git+https://github.com/SlyyCooper/tangent_agents.git
 ```
 
 ## Usage
