@@ -218,76 +218,12 @@ def greet(name, age: int, location: str = "New York"):
 }
 ```
 
-### Handoffs
-
-An `Agent` can hand off to another `Agent` by returning it in a `function`.
-
-```python
-sales_agent = Agent(name="Sales Agent")
-
-def transfer_to_sales():
-   return sales_agent
-
-agent = Agent(functions=[transfer_to_sales])
-
-response = client.run(agent, [{"role":"user", "content":"Transfer me to sales."}])
-print(response.agent.name)
-```
-
-```
-Sales Agent
-```
-
-### Context Variables
-
-It can also update the `context_variables` by returning a more complete `Result` object. This can also contain a `value` and an `agent`, in case you want a single function to return a value, update the agent, and update the context variables (or any subset of the three).
-
-```python
-sales_agent = Agent(name="Sales Agent")
-
-def talk_to_sales():
-   print("Hello, World!")
-   return Result(
-       value="Done",
-       agent=sales_agent,
-       context_variables={"department": "sales"}
-   )
-
-agent = Agent(functions=[talk_to_sales])
-
-response = client.run(
-   agent=agent,
-   messages=[{"role": "user", "content": "Transfer me to sales"}],
-   context_variables={"user_name": "John"}
-)
-print(response.agent.name)
-print(response.context_variables)
-```
-
-```
-Sales Agent
-{'department': 'sales', 'user_name': 'John'}
-```
-
 > [!NOTE]
 > If an `Agent` calls multiple functions to hand-off to an `Agent`, only the last handoff function will be used.
 
-### Streaming
+## Embeddings
 
-```python
-stream = client.run(agent, messages, stream=True)
-for chunk in stream:
-   print(chunk)
-```
-
-Uses the same events as [Chat Completions API streaming](https://platform.openai.com/docs/api-reference/streaming). See `process_and_print_streaming_response` in `/tangent/repl/repl.py` as an example.
-
-Two new event types have been added:
-
-- `{"delim":"start"}` and `{"delim":"end"}`, to signal each time an `Agent` handles a single message (response or function call). This helps identify switches between `Agent`s.
-- `{"response": Response}` will return a `Response` object at the end of a stream with the aggregated (complete) response, for convenience.
-
-##### 1. Embedding Integration
+### Embedding Integration
 
 For knowledge-based agents:
 
@@ -329,7 +265,7 @@ docs_agent = Agent(
 )
 ```
 
-## Document Processing
+### Document Processing
 
 The DocumentStore supports multiple formats:
 - `.txt` (plain text)
@@ -344,59 +280,22 @@ Features:
 - Vector database storage (Qdrant/Pinecone)
 - Semantic search capabilities
 
+## Streaming
 
-### Timed or Event-Triggered Agents
-
-Tangent itself is stateless between calls, but you can build scheduling or triggers around it:
-
-- **External Cron/Timer**: At a scheduled time, run a function that calls `client.run(...)` with a specific agent (e.g., a "Reminder Agent").
-- **Event-Driven**: If an external event or database insert triggers something, you can programmatically call `client.run(...)` with that agent.
-
-**Example** (pseudo-code):
 
 ```python
-import time
-
-while True:
-    time.sleep(60)  # check every minute
-    if check_database_for_updates():
-        messages = [{"role": "user", "content": "New data arrived in DB, handle it."}]
-        response = client.run(agent=db_agent, messages=messages)
-        ...
+stream = client.run(agent, messages, stream=True)
+for chunk in stream:
+   print(chunk)
 ```
 
-### Connecting Agents to a Database
+Uses the same events as [Chat Completions API streaming](https://platform.openai.com/docs/api-reference/streaming). See `process_and_print_streaming_response` in `/tangent/repl/repl.py` as an example.
 
-Agents can call **tools** (Python functions) that interact with any database. For instance:
+Two new event types have been added:
 
-```python
-def store_in_db(data: dict):
-    """
-    Insert data into our MySQL database.
-    """
-    # your DB logic here...
-    return "Data stored!"
-```
+- `{"delim":"start"}` and `{"delim":"end"}`, to signal each time an `Agent` handles a single message (response or function call). This helps identify switches between `Agent`s.
+- `{"response": Response}` will return a `Response` object at the end of a stream with the aggregated (complete) response, for convenience.
 
-Attach to an agent:
-
-```python
-db_agent = Agent(
-    name="Database Agent",
-    instructions="You can store data in our DB using store_in_db().",
-    functions=[store_in_db]
-)
-```
-
-### Agent Activation on Specific Conditions
-
-If you want an agent to be "activated" only when certain conditions are met, you have several options:
-
-1. **Triage Logic**: The triage agent can call a specialized agent only if the user's request matches certain instructions.
-2. **Model Logic**: The model can interpret requests and call the appropriate function or transfer function automatically.
-3. **Manual Logic**: You can filter user requests yourself in Python and decide to call `client.run(..., agent=some_agent)` only if certain text or conditions match.
-
-For instance, you might parse user input for keywords like "urgent" or "report," then decide to run a specialized "Alert Agent."
 
 ## Triage Agent
 
@@ -522,7 +421,80 @@ def transfer_with_context():
     )
 ```
 
+### Handoffs
 
+An `Agent` can hand off to another `Agent` by returning it in a `function`.
+
+```python
+sales_agent = Agent(name="Sales Agent")
+
+def transfer_to_sales():
+   return sales_agent
+
+agent = Agent(functions=[transfer_to_sales])
+
+response = client.run(agent, [{"role":"user", "content":"Transfer me to sales."}])
+print(response.agent.name)
+```
+
+```
+Sales Agent
+```
+
+## Advanced Techniques
+
+### Timed or Event-Triggered Agents
+
+Tangent itself is stateless between calls, but you can build scheduling or triggers around it:
+
+- **External Cron/Timer**: At a scheduled time, run a function that calls `client.run(...)` with a specific agent (e.g., a "Reminder Agent").
+- **Event-Driven**: If an external event or database insert triggers something, you can programmatically call `client.run(...)` with that agent.
+
+**Example** (pseudo-code):
+
+```python
+import time
+
+while True:
+    time.sleep(60)  # check every minute
+    if check_database_for_updates():
+        messages = [{"role": "user", "content": "New data arrived in DB, handle it."}]
+        response = client.run(agent=db_agent, messages=messages)
+        ...
+```
+
+### Connecting Agents to a Database
+
+Agents can call **tools** (Python functions) that interact with any database. For instance:
+
+```python
+def store_in_db(data: dict):
+    """
+    Insert data into our MySQL database.
+    """
+    # your DB logic here...
+    return "Data stored!"
+```
+
+Attach to an agent:
+
+```python
+db_agent = Agent(
+    name="Database Agent",
+    instructions="You can store data in our DB using store_in_db().",
+    functions=[store_in_db]
+)
+```
+
+### Agent Activation on Specific Conditions
+
+If you want an agent to be "activated" only when certain conditions are met, you have several options:
+
+1. **Triage Logic**: The triage agent can call a specialized agent only if the user's request matches certain instructions.
+2. **Model Logic**: The model can interpret requests and call the appropriate function or transfer function automatically.
+3. **Manual Logic**: You can filter user requests yourself in Python and decide to call `client.run(..., agent=some_agent)` only if certain text or conditions match.
+
+For instance, you might parse user input for keywords like "urgent" or "report," then decide to run a specialized "Alert Agent."
 ## Examples
 
 Check out `/examples` for inspiration! Learn more about each one in its README.
