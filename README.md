@@ -101,6 +101,8 @@ While it's tempting to personify an `Agent` as "someone who does X", it can also
 | **functions**        | `List`                   | A list of functions that the agent can call.                                  | `[]`                         |
 | **tool_choice**      | `str`                    | The tool choice for the agent, if any.                                        | `None`                       |
 | **triage_assignment**| `str`                    | The name of the triage agent this agent is assigned to.                       | `None`                       |
+| **embedding_config** | `str`                    | The name of the embedding config for the agent, if any.                       | `None`                       |
+| **embedding_manager**| `str`                    | The name of the embedding manager for the agent, if any.                      | `None`                       |
 
 ### Functions
 
