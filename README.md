@@ -40,10 +40,10 @@ Requires Python 3.10+
 
 ```shell
 # SSH installation
-pip install git+ssh://git@github.com/SlyyCooper/tangent_agents.git
+pip install git+ssh://git@github.com/SlyyCooper/tangent.git
 
 # HTTPS installation
-pip install git+https://github.com/SlyyCooper/tangent_agents.git
+pip install git+https://github.com/SlyyCooper/tangent.git
 ```
 
 ## Quick Start Example
