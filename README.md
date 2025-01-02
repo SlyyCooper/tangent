@@ -294,116 +294,6 @@ Two new event types have been added:
 - `{"delim":"start"}` and `{"delim":"end"}`, to signal each time an `Agent` handles a single message (response or function call). This helps identify switches between `Agent`s.
 - `{"response": Response}` will return a `Response` object at the end of a stream with the aggregated (complete) response, for convenience.
 
-## Triage Agent
-
-The triage agent is a specialized orchestrator that automatically manages and routes requests to other agents. It provides:
-
-1. **Automatic Agent Discovery**
-   - Agents can be assigned to a triage agent using the `triage_assignment` field
-   - The triage agent automatically discovers and manages assigned agents
-
-2. **Dynamic Transfer Functions**
-   - Transfer functions are automatically created for each managed agent
-   - Each managed agent gets a transfer back function to return to the triage agent
-
-3. **Smart Routing**
-   - Routes requests to appropriate specialized agents based on their capabilities
-   - Maintains conversation context across transfers
-   - Can handle requests directly when no specialization is needed
-
-### Creating a Triage Agent
-
-```python
-from tangent.triage.agent import create_triage_agent
-
-triage_agent = create_triage_agent(
-    name="Orchestrator",
-    instructions="Route requests to specialized agents",
-    auto_discover=True  # Enable automatic agent discovery
-)
-```
-
-### Assigning Agents to Triage
-
-```python
-specialized_agent = Agent(
-    name="Specialist",
-    instructions="Handle specialized tasks",
-    functions=[special_function],
-    triage_assignment="Orchestrator"  # Must match triage agent name
-)
-```
-
-The triage agent will automatically:
-1. Discover the assigned agent
-2. Create transfer functions
-3. Add transfer back capability
-4. Update its instructions with agent information
-
-# Detailed Triage Agent Guide
-
-Comprehensive guide for building and running triage (orchestration) agents with Tangent. This section provides an in-depth look at creating, configuring, and running triage agents.
-
-#### Triage Agent Implementation
-
-The triage agent serves as an orchestrator, managing and routing requests to specialized agents. Here's how to set it up:
-
-##### 1. Creating the Triage Agent
-
-```python
-from tangent.triage.agent import create_triage_agent
-
-triage_agent = create_triage_agent(
-    name="Triage Agent",
-    instructions="""You are the orchestrator. Route requests to specialized agents 
-    or handle them yourself.""",
-    auto_discover=True  # Auto-discovers assigned agents
-)
-```
-
-##### 2. Creating Specialized Agents
-
-```python
-# Sales Agent Example
-sales_agent = Agent(
-    name="Sales Agent",
-    instructions="Handle sales inquiries. Offer products and manage orders.",
-    functions=[offer_discount],  # Your sales-specific tools
-    triage_assignment="Triage Agent"  # Must match triage agent's name
-)
-
-# Document Assistant Example
-docs_agent = Agent(
-    name="Document Assistant",
-    instructions="Search and provide information from our document base.",
-    functions=[search_documents],
-    triage_assignment="Triage Agent"
-)
-```
-
-#### How Triage Works
-
-1. **Discovery**: The triage agent automatically discovers agents assigned to it via `triage_assignment`
-2. **Transfer Functions**: Creates transfer functions for each discovered agent
-3. **Routing**: Analyzes requests and routes to appropriate specialized agents
-4. **Context**: Maintains conversation context across transfers
-
-#### Triage Flow Example
-
-```python
-# 1. User sends message to triage agent
-response = client.run(
-    agent=triage_agent,
-    messages=[{"role": "user", "content": "I want to buy something"}]
-)
-
-# 2. Triage agent analyzes and transfers to sales agent if appropriate
-# 3. Sales agent handles request with its specialized tools
-# 4. Sales agent can transfer back when done
-```
-
-#### Advanced Features
-
 ##### 1. Embedding Integration
 
 For knowledge-based agents:
@@ -461,56 +351,6 @@ Features:
 - Vector database storage (Qdrant/Pinecone)
 - Semantic search capabilities
 
-## Advanced Topics
-
-### Multi-Turn Conversations & Context
-
-#### Multi-Turn Basics
-
-Tangent can handle multi-turn conversations within a single `client.run(...)` call. By default, the code in `core.py` loops until there are no more function calls or until `max_turns` is reached.
-
-- **Each time** the model responds, Tangent checks if it wants to call any tools (function calls).
-- If so, it executes them and appends the results to the conversation.
-- The conversation can continue multiple times until the model stops calling new tools.
-
-#### Passing Context History
-
-Messages from previous user interactions are appended to the `messages` list. You can keep adding new user messages to `messages` to preserve a conversation's history. Tangent automatically includes them in the next call.
-
-**Example**:
-
-```python
-messages = []
-while True:
-    user_input = input("User: ")
-    messages.append({"role": "user", "content": user_input})
-    
-    response = client.run(
-        agent=my_agent,
-        messages=messages
-    )
-    
-    # The agent's final response:
-    print(response.messages[-1]["content"])
-    messages.extend(response.messages)  # preserve them for next turn
-```
-
-#### Passing Context Between Agents
-
-When an agent **hands off** to another agent (by returning an `Agent` in a function call or using triage-based `transfer`), the conversation's **`context_variables`** also get passed along. If your agent function returns a `Result` with `context_variables`, those updates are merged into the context before the next agent takes control.
-
-**Example**:
-```python
-def transfer_with_context():
-    """
-    Transfer to Sales Agent, but also store user preference in context.
-    """
-    return Result(
-        value="Switching you to Sales.",
-        agent=sales_agent,
-        context_variables={"preferred_color": "blue"}
-    )
-```
 
 ### Timed or Event-Triggered Agents
 
@@ -564,6 +404,131 @@ If you want an agent to be "activated" only when certain conditions are met, you
 3. **Manual Logic**: You can filter user requests yourself in Python and decide to call `client.run(..., agent=some_agent)` only if certain text or conditions match.
 
 For instance, you might parse user input for keywords like "urgent" or "report," then decide to run a specialized "Alert Agent."
+
+## Triage Agent
+
+The triage agent is a specialized orchestrator that automatically manages and routes requests to other agents. It provides:
+
+1. **Automatic Agent Discovery**
+   - Agents can be assigned to a triage agent using the `triage_assignment` field
+   - The triage agent automatically discovers and manages assigned agents
+
+2. **Dynamic Transfer Functions**
+   - Transfer functions are automatically created for each managed agent
+   - Each managed agent gets a transfer back function to return to the triage agent
+
+3. **Smart Routing**
+   - Routes requests to appropriate specialized agents based on their capabilities
+   - Maintains conversation context across transfers
+   - Can handle requests directly when no specialization is needed
+
+Below is a comprehensive guide for building and running triage (orchestration) agents with Tangent. This section provides an in-depth look at creating, configuring, and running triage agents.
+
+### Triage Agent Implementation
+
+##### 1. Creating the Triage Agent
+
+```python
+from tangent.triage.agent import create_triage_agent
+
+triage_agent = create_triage_agent(
+    name="Triage Agent",
+    instructions="""You are the orchestrator. Route requests to specialized agents 
+    or handle them yourself.""",
+    auto_discover=True  # Auto-discovers assigned agents
+)
+```
+
+##### 2. Assigning Agents to Triage Agent
+
+```python
+# Sales Agent Example
+sales_agent = Agent(
+    name="Sales Agent",
+    instructions="Handle sales inquiries. Offer products and manage orders.",
+    functions=[offer_discount],  # Your sales-specific tools
+    triage_assignment="Triage Agent"  # Must match triage agent's name
+)
+
+# Document Assistant Example
+docs_agent = Agent(
+    name="Document Assistant",
+    instructions="Search and provide information from our document base.",
+    functions=[search_documents],
+    triage_assignment="Triage Agent"
+)
+```
+
+#### How Triage Works
+
+1. **Discovery**: The triage agent automatically discovers agents assigned to it via `triage_assignment`
+2. **Transfer Functions**: Creates transfer functions for each discovered agent
+3. **Routing**: Analyzes requests and routes to appropriate specialized agents
+4. **Context**: Maintains conversation context across transfers
+
+#### Triage Flow Example
+
+```python
+# 1. User sends message to triage agent
+response = client.run(
+    agent=triage_agent,
+    messages=[{"role": "user", "content": "I want to buy something"}]
+)
+
+# 2. Triage agent analyzes and transfers to sales agent if appropriate
+# 3. Sales agent handles request with its specialized tools
+# 4. Sales agent can transfer back when done
+```
+
+### Multi-Turn Conversations & Context
+
+#### Multi-Turn Basics
+
+Tangent can handle multi-turn conversations within a single `client.run(...)` call. By default, the code in `core.py` loops until there are no more function calls or until `max_turns` is reached.
+
+- **Each time** the model responds, Tangent checks if it wants to call any tools (function calls).
+- If so, it executes them and appends the results to the conversation.
+- The conversation can continue multiple times until the model stops calling new tools.
+
+#### Passing Context History
+
+Messages from previous user interactions are appended to the `messages` list. You can keep adding new user messages to `messages` to preserve a conversation's history. Tangent automatically includes them in the next call.
+
+**Example**:
+
+```python
+messages = []
+while True:
+    user_input = input("User: ")
+    messages.append({"role": "user", "content": user_input})
+    
+    response = client.run(
+        agent=my_agent,
+        messages=messages
+    )
+    
+    # The agent's final response:
+    print(response.messages[-1]["content"])
+    messages.extend(response.messages)  # preserve them for next turn
+```
+
+#### Passing Context Between Agents
+
+When an agent **hands off** to another agent (by returning an `Agent` in a function call or using triage-based `transfer`), the conversation's **`context_variables`** also get passed along. If your agent function returns a `Result` with `context_variables`, those updates are merged into the context before the next agent takes control.
+
+**Example**:
+```python
+def transfer_with_context():
+    """
+    Transfer to Sales Agent, but also store user preference in context.
+    """
+    return Result(
+        value="Switching you to Sales.",
+        agent=sales_agent,
+        context_variables={"preferred_color": "blue"}
+    )
+```
+
 
 ## Examples
 
