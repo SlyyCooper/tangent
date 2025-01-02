@@ -280,21 +280,6 @@ Features:
 - Vector database storage (Qdrant/Pinecone)
 - Semantic search capabilities
 
-## Streaming
-
-```python
-stream = client.run(agent, messages, stream=True)
-for chunk in stream:
-   print(chunk)
-```
-
-Uses the same events as [Chat Completions API streaming](https://platform.openai.com/docs/api-reference/streaming). See `process_and_print_streaming_response` in `/tangent/repl/repl.py` as an example.
-
-Two new event types have been added:
-
-- `{"delim":"start"}` and `{"delim":"end"}`, to signal each time an `Agent` handles a single message (response or function call). This helps identify switches between `Agent`s.
-- `{"response": Response}` will return a `Response` object at the end of a stream with the aggregated (complete) response, for convenience.
-
 ## Multi-Turn Conversations
 
 ### Multi-Turn Basics
@@ -326,6 +311,21 @@ while True:
     print(response.messages[-1]["content"])
     messages.extend(response.messages)  # preserve them for next turn
 ```
+
+## Streaming
+
+```python
+stream = client.run(agent, messages, stream=True)
+for chunk in stream:
+   print(chunk)
+```
+
+Uses the same events as [Chat Completions API streaming](https://platform.openai.com/docs/api-reference/streaming). See `process_and_print_streaming_response` in `/tangent/repl/repl.py` as an example.
+
+Two new event types have been added:
+
+- `{"delim":"start"}` and `{"delim":"end"}`, to signal each time an `Agent` handles a single message (response or function call). This helps identify switches between `Agent`s.
+- `{"response": Response}` will return a `Response` object at the end of a stream with the aggregated (complete) response, for convenience.
 
 
 ## Triage Agent
