@@ -178,7 +178,7 @@ Hola, John!
 - If an `Agent` function call has an error (missing function, wrong argument, error) an error response will be appended to the chat so the `Agent` can recover gracefully.
 - If multiple functions are called by the `Agent`, they will be executed in that order.
 
-#### Function Schemas
+### Function Schemas
 
 tangent automatically converts functions into a JSON Schema that is passed into Chat Completions `tools`.
 
@@ -282,7 +282,6 @@ Features:
 
 ## Streaming
 
-
 ```python
 stream = client.run(agent, messages, stream=True)
 for chunk in stream:
@@ -295,6 +294,38 @@ Two new event types have been added:
 
 - `{"delim":"start"}` and `{"delim":"end"}`, to signal each time an `Agent` handles a single message (response or function call). This helps identify switches between `Agent`s.
 - `{"response": Response}` will return a `Response` object at the end of a stream with the aggregated (complete) response, for convenience.
+
+## Multi-Turn Conversations
+
+### Multi-Turn Basics
+
+Tangent can handle multi-turn conversations within a single `client.run(...)` call. By default, the code in `core.py` loops until there are no more function calls or until `max_turns` is reached.
+
+- **Each time** the model responds, Tangent checks if it wants to call any tools (function calls).
+- If so, it executes them and appends the results to the conversation.
+- The conversation can continue multiple times until the model stops calling new tools.
+
+### Passing Context History
+
+Messages from previous user interactions are appended to the `messages` list. You can keep adding new user messages to `messages` to preserve a conversation's history. Tangent automatically includes them in the next call.
+
+**Example**:
+
+```python
+messages = []
+while True:
+    user_input = input("User: ")
+    messages.append({"role": "user", "content": user_input})
+    
+    response = client.run(
+        agent=my_agent,
+        messages=messages
+    )
+    
+    # The agent's final response:
+    print(response.messages[-1]["content"])
+    messages.extend(response.messages)  # preserve them for next turn
+```
 
 
 ## Triage Agent
@@ -372,55 +403,6 @@ response = client.run(
 # 4. Sales agent can transfer back when done
 ```
 
-### Multi-Turn Conversations & Context
-
-#### Multi-Turn Basics
-
-Tangent can handle multi-turn conversations within a single `client.run(...)` call. By default, the code in `core.py` loops until there are no more function calls or until `max_turns` is reached.
-
-- **Each time** the model responds, Tangent checks if it wants to call any tools (function calls).
-- If so, it executes them and appends the results to the conversation.
-- The conversation can continue multiple times until the model stops calling new tools.
-
-#### Passing Context History
-
-Messages from previous user interactions are appended to the `messages` list. You can keep adding new user messages to `messages` to preserve a conversation's history. Tangent automatically includes them in the next call.
-
-**Example**:
-
-```python
-messages = []
-while True:
-    user_input = input("User: ")
-    messages.append({"role": "user", "content": user_input})
-    
-    response = client.run(
-        agent=my_agent,
-        messages=messages
-    )
-    
-    # The agent's final response:
-    print(response.messages[-1]["content"])
-    messages.extend(response.messages)  # preserve them for next turn
-```
-
-#### Passing Context Between Agents
-
-When an agent **hands off** to another agent (by returning an `Agent` in a function call or using triage-based `transfer`), the conversation's **`context_variables`** also get passed along. If your agent function returns a `Result` with `context_variables`, those updates are merged into the context before the next agent takes control.
-
-**Example**:
-```python
-def transfer_with_context():
-    """
-    Transfer to Sales Agent, but also store user preference in context.
-    """
-    return Result(
-        value="Switching you to Sales.",
-        agent=sales_agent,
-        context_variables={"preferred_color": "blue"}
-    )
-```
-
 ### Handoffs
 
 An `Agent` can hand off to another `Agent` by returning it in a `function`.
@@ -439,6 +421,23 @@ print(response.agent.name)
 
 ```
 Sales Agent
+```
+
+### Passing Context with Triage Agents
+
+When an agent **hands off** to another agent (by returning an `Agent` in a function call or using triage-based `transfer`), the conversation's **`context_variables`** also get passed along. If your agent function returns a `Result` with `context_variables`, those updates are merged into the context before the next agent takes control.
+
+**Example**:
+```python
+def transfer_with_context():
+    """
+    Transfer to Sales Agent, but also store user preference in context.
+    """
+    return Result(
+        value="Switching you to Sales.",
+        agent=sales_agent,
+        context_variables={"preferred_color": "blue"}
+    )
 ```
 
 ## Advanced Techniques
@@ -498,7 +497,6 @@ For instance, you might parse user input for keywords like "urgent" or "report,"
 ## Examples
 
 Check out `/examples` for inspiration! Learn more about each one in its README.
-
 
 - [`triage_agent`](examples/triage_agent): Example of automatic agent discovery and routing using the triage agent. Passing users to the 'websearch_agent'or 'embedding_agent' based on their request.
 - [`websearch_agent`](examples/websearch_agent): Example of an agent that can search the web and summarize results
