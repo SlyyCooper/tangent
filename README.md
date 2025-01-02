@@ -1,6 +1,8 @@
-# tangent
+# 🦊 Tangent
 
-> tangent is a framework with ergonomic interfaces for multi-agent systems.
+*Inspired by [OpenAI's Swarm](https://github.com/openai/swarm)*
+
+> A lightweight, ergonomic framework for building and orchestrating multi-agent systems. Created by [SlyyCooper](https://github.com/SlyyCooper).
 
 ## Install
 

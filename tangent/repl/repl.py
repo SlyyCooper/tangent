@@ -61,7 +61,7 @@ def run_tangent_loop(
     starting_agent, context_variables=None, stream=False, debug=False
 ) -> None:
     client = tangent()
-    print("Starting tangent CLI 🐝")
+    print("Starting tangent CLI 🦊")
 
     messages = []
     agent = starting_agent
