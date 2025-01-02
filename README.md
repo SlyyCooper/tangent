@@ -9,13 +9,13 @@
 Requires Python 3.10+
 
 ```shell
-pip install git+ssh://git@github.com/SlyyCooper/tangent_agents.git
+pip install git+ssh://git@github.com/SlyyCooper/tangent.git
 ```
 
 or
 
 ```shell
-pip install git+https://github.com/SlyyCooper/tangent_agents.git
+pip install git+https://github.com/SlyyCooper/tangent.git
 ```
 
 ## Usage
