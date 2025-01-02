@@ -3,7 +3,7 @@
 </div>
 
 <div align="center">
-  <img src="public/tangent.webp" alt="Tangent" width="1200" height="200" style="object-fit: contain;"/>
+  <img src="public/tangent.webp" alt="Tangent" width="800" height="200" style="object-fit: contain;"/>
 </div>
 
 
