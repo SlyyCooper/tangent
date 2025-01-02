@@ -18,6 +18,8 @@ pip install git+https://github.com/SlyyCooper/tangent_agents.git
 
 ## Usage
 
+### Basic Agent Example
+
 ```python
 from tangent import tangent, Agent
 
@@ -25,7 +27,6 @@ client = tangent()
 
 def transfer_to_agent_b():
     return agent_b
-
 
 agent_a = Agent(
     name="Agent A",
@@ -52,6 +53,49 @@ New paths converge gracefully,
 What can I assist?
 ```
 
+### Triage Agent Example
+
+The triage agent acts as an orchestrator, automatically managing and routing requests to specialized agents:
+
+```python
+from tangent import Agent
+from tangent.triage.agent import create_triage_agent
+
+# Create specialized agents
+web_search_agent = Agent(
+    name="Web Search Agent",
+    instructions="Search the internet for information",
+    functions=[web_search],
+    triage_assignment="Research Assistant"  # Assign to triage agent
+)
+
+docs_agent = Agent(
+    name="Document Assistant",
+    instructions="Search through our document collection",
+    functions=[search_documents],
+    triage_assignment="Research Assistant"
+)
+
+# Create the triage agent
+triage_agent = create_triage_agent(
+    name="Research Assistant",
+    instructions="""Route requests to appropriate specialized agents:
+    - Web searches -> Web Search Agent
+    - Document queries -> Document Assistant"""
+)
+
+# The triage agent will automatically:
+# 1. Discover assigned agents
+# 2. Create transfer functions
+# 3. Route requests appropriately
+```
+
+Key features of the triage agent:
+- Automatic agent discovery via `triage_assignment`
+- Dynamic transfer function creation
+- Automatic transfer back functionality
+- Context preservation across transfers
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -61,6 +105,7 @@ What can I assist?
   - [Agents](#agents)
   - [Functions](#functions)
   - [Streaming](#streaming)
+  - [Triage Agent](#triage-agent)
 - [Evaluations](#evaluations)
 - [Utils](#utils)
 
@@ -68,7 +113,10 @@ What can I assist?
 
 tangent focuses on making agent **coordination** and **execution** lightweight, highly controllable, and easily testable.
 
-It accomplishes this through two primitive abstractions: `Agent`s and **handoffs**. An `Agent` encompasses `instructions` and `tools`, and can at any point choose to hand off a conversation to another `Agent`.
+It accomplishes this through three primitive abstractions:
+1. `Agent`s (encompassing instructions and tools)
+2. **Handoffs** (allowing agents to transfer control)
+3. **Triage** (automatic orchestration and routing)
 
 These primitives are powerful enough to express rich dynamics between tools and networks of agents, allowing you to build scalable, real-world solutions while avoiding a steep learning curve.
 
@@ -86,9 +134,9 @@ The Assistants API is a great option for developers looking for fully-hosted thr
 Check out `/examples` for inspiration! Learn more about each one in its README.
 
 - [`basic`](examples/basic): Simple examples of fundamentals like setup, function calling, handoffs, and context variables
-- [`triage_agent`](examples/triage_agent): Simple example of setting up a basic triage step to hand off to the right agent
+- [`triage_agent`](examples/triage_agent): Example of automatic agent discovery and routing using the triage agent
 - [`weather_agent`](examples/weather_agent): Simple example of function calling
-- [`airline`](examples/airline): A multi-agent setup for handling different customer service requests in an airline context.
+- [`airline`](examples/airline): A multi-agent setup for handling different customer service requests in an airline context
 - [`support_bot`](examples/support_bot): A customer service bot which includes a user interface agent and a help center agent with several tools
 - [`personal_shopper`](examples/personal_shopper): A personal shopping agent that can help with making sales and refunding orders
 
@@ -131,8 +179,6 @@ At its core, tangent's `client.run()` implements the following loop:
 | **stream**            | `bool`  | If `True`, enables streaming responses                                                                                                                 | `False`        |
 | **debug**             | `bool`  | If `True`, enables debug logging                                                                                                                       | `False`        |
 
-Once `client.run()` is finished (after potentially multiple calls to agents and tools) it will return a `Response` containing all the relevant updated state. Specifically, the new `messages`, the last `Agent` to be called, and the most up-to-date `context_variables`. You can pass these values (plus new user messages) in to your next execution of `client.run()` to continue the interaction where it left off – much like `chat.completions.create()`. (The `run_tangent_loop` function implements an example of a full execution loop in `/tangent/repl/repl.py`.)
-
 #### `Response` Fields
 
 | Field                 | Type    | Description                                                                                                                                                                                                                                                                  |
@@ -147,47 +193,62 @@ An `Agent` simply encapsulates a set of `instructions` with a set of `functions`
 
 While it's tempting to personify an `Agent` as "someone who does X", it can also be used to represent a very specific workflow or step defined by a set of `instructions` and `functions` (e.g. a set of steps, a complex retrieval, single step of data transformation, etc). This allows `Agent`s to be composed into a network of "agents", "workflows", and "tasks", all represented by the same primitive.
 
-## `Agent` Fields
+### `Agent` Fields
 
-| Field            | Type                     | Description                                                                   | Default                      |
-| ---------------- | ------------------------ | ----------------------------------------------------------------------------- | ---------------------------- |
-| **name**         | `str`                    | The name of the agent.                                                        | `"Agent"`                    |
-| **model**        | `str`                    | The model to be used by the agent.                                            | `"gpt-4o"`                   |
-| **instructions** | `str` or `func() -> str` | Instructions for the agent, can be a string or a callable returning a string. | `"You are a helpful agent."` |
-| **functions**    | `List`                   | A list of functions that the agent can call.                                  | `[]`                         |
-| **tool_choice**  | `str`                    | The tool choice for the agent, if any.                                        | `None`                       |
+| Field                | Type                     | Description                                                                   | Default                      |
+| -------------------- | ------------------------ | ----------------------------------------------------------------------------- | ---------------------------- |
+| **name**             | `str`                    | The name of the agent.                                                        | `"Agent"`                    |
+| **model**            | `str`                    | The model to be used by the agent.                                            | `"gpt-4o"`                   |
+| **instructions**     | `str` or `func() -> str` | Instructions for the agent, can be a string or a callable returning a string. | `"You are a helpful agent."` |
+| **functions**        | `List`                   | A list of functions that the agent can call.                                  | `[]`                         |
+| **tool_choice**      | `str`                    | The tool choice for the agent, if any.                                        | `None`                       |
+| **triage_assignment**| `str`                    | The name of the triage agent this agent is assigned to.                       | `None`                       |
 
-### Instructions
+## Triage Agent
 
-`Agent` `instructions` are directly converted into the `system` prompt of a conversation (as the first message). Only the `instructions` of the active `Agent` will be present at any given time (e.g. if there is an `Agent` handoff, the `system` prompt will change, but the chat history will not.)
+The triage agent is a specialized orchestrator that automatically manages and routes requests to other agents. It provides:
+
+1. **Automatic Agent Discovery**
+   - Agents can be assigned to a triage agent using the `triage_assignment` field
+   - The triage agent automatically discovers and manages assigned agents
+
+2. **Dynamic Transfer Functions**
+   - Transfer functions are automatically created for each managed agent
+   - Each managed agent gets a transfer back function to return to the triage agent
+
+3. **Smart Routing**
+   - Routes requests to appropriate specialized agents based on their capabilities
+   - Maintains conversation context across transfers
+   - Can handle requests directly when no specialization is needed
+
+### Creating a Triage Agent
 
 ```python
-agent = Agent(
-   instructions="You are a helpful agent."
+from tangent.triage.agent import create_triage_agent
+
+triage_agent = create_triage_agent(
+    name="Orchestrator",
+    instructions="Route requests to specialized agents",
+    auto_discover=True  # Enable automatic agent discovery
 )
 ```
 
-The `instructions` can either be a regular `str`, or a function that returns a `str`. The function can optionally receive a `context_variables` parameter, which will be populated by the `context_variables` passed into `client.run()`.
+### Assigning Agents to Triage
 
 ```python
-def instructions(context_variables):
-   user_name = context_variables["user_name"]
-   return f"Help the user, {user_name}, do whatever they want."
-
-agent = Agent(
-   instructions=instructions
+specialized_agent = Agent(
+    name="Specialist",
+    instructions="Handle specialized tasks",
+    functions=[special_function],
+    triage_assignment="Orchestrator"  # Must match triage agent name
 )
-response = client.run(
-   agent=agent,
-   messages=[{"role":"user", "content": "Hi!"}],
-   context_variables={"user_name":"John"}
-)
-print(response.messages[-1]["content"])
 ```
 
-```
-Hi John, how can I assist you today?
-```
+The triage agent will automatically:
+1. Discover the assigned agent
+2. Create transfer functions
+3. Add transfer back capability
+4. Update its instructions with agent information
 
 ## Functions
 
@@ -209,7 +270,7 @@ agent = Agent(
 
 client.run(
    agent=agent,
-   messages=[{"role": "user", "content": "Usa greet() por favor."}],
+   messages=[{"role":"user", "content": "Usa greet() por favor."}],
    context_variables={"user_name": "John"}
 )
 ```
