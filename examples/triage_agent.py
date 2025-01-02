@@ -1,5 +1,5 @@
 from tangent import Agent, tangent
-from tangent.triage.agent import create_triage_agent
+from tangent import create_triage_agent
 from websearch_agent import web_search_agent
 from embedding_agent import embedding_agent
 

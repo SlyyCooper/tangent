@@ -1,5 +1,5 @@
 from tangent import Agent, tangent, run_tangent_loop, process_and_print_streaming_response
-from tangent.types import Result
+from tangent import Result
 import os
 import subprocess
 

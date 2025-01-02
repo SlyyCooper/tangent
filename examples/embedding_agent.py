@@ -1,6 +1,5 @@
-from tangent import Agent, tangent
-from tangent.types import Result, QdrantConfig, EmbeddingConfig
-from tangent.embeddings import DocumentStore
+from tangent import Agent, tangent, Result, DocumentStore
+from tangent.types import EmbeddingConfig, QdrantConfig
 from typing import List
 import os
 
