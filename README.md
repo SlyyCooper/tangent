@@ -10,7 +10,7 @@
 
 > A lightweight, ergonomic framework for building and orchestrating multi-agent systems. Created by [SlyyCooper](https://github.com/SlyyCooper).
 
-Tangent focuses on making agent **coordination** and **execution** lightweight, highly controllable, and easily testable.
+**Tangent** focuses on making agent **coordination** and **execution** lightweight, highly controllable, and easily testable.
 
 It accomplishes this through three primitive abstractions:
 1. `Agent`s (encompassing instructions and tools)
@@ -19,14 +19,6 @@ It accomplishes this through three primitive abstractions:
 
 These primitives are powerful enough to express rich dynamics between tools and networks of agents, allowing you to build scalable, real-world solutions while avoiding a steep learning curve.
 
-## Important Notes
-
-- **Model Support**: Uses `gpt-4o` as the default model (GPT-4 is deprecated in this codebase)
-- **Embedding Model**: Default is `text-embedding-3-large`
-- **Vector Database Support**: 
-  - Qdrant (default)
-  - Pinecone
-  - Custom implementations
 
 ## Install
 
