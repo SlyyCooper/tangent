@@ -13,7 +13,7 @@
 **Tangent** focuses on making agent **coordination** and **execution** lightweight, highly controllable, and easily testable.
 
 It accomplishes this through three primitive abstractions:
-1. `Agent`s (encompassing instructions and tools)
+1. **Agents** (encompassing instructions and tools)
 2. **Handoffs** (allowing agents to transfer control)
 3. **Triage** (automatic orchestration and routing)
 
