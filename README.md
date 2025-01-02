@@ -5,10 +5,6 @@
 <div align="center">
   <img src="public/tangent.webp" alt="Tangent" width="600"/>
 </div>
-
-
-
-
 *Inspired by [OpenAI's Swarm](https://github.com/openai/swarm)*
 
 > A lightweight, ergonomic framework for building and orchestrating multi-agent systems. Created by [SlyyCooper](https://github.com/SlyyCooper).
@@ -21,9 +17,6 @@ It accomplishes this through three primitive abstractions:
 3. **Triage** (automatic orchestration and routing)
 
 These primitives are powerful enough to express rich dynamics between tools and networks of agents, allowing you to build scalable, real-world solutions while avoiding a steep learning curve.
-
-> [!NOTE]
-> tangent Agents are not related to Assistants in the Assistants API. They are named similarly for convenience, but are otherwise completely unrelated. tangent is entirely powered by the Chat Completions API and is hence stateless between calls.
 
 ## Important Notes
 
@@ -55,32 +48,88 @@ from tangent import tangent, Agent
 
 client = tangent()
 
-def transfer_to_agent_b():
-    return agent_b
-
-agent_a = Agent(
-    name="Agent A",
-    instructions="You are a helpful agent.",
-    functions=[transfer_to_agent_b],
-)
-
-agent_b = Agent(
-    name="Agent B",
-    instructions="Only speak in Haikus.",
+chat_agent = Agent(
+    name="ChatBot",
+    instructions="""You are a friendly and helpful assistant. 
+    Keep responses clear and concise."""
 )
 
 response = client.run(
-    agent=agent_a,
-    messages=[{"role": "user", "content": "I want to talk to agent B."}],
+    agent=chat_agent,
+    messages=[{"role": "user", "content": "Hello! How can you help me today?"}]
 )
 
 print(response.messages[-1]["content"])
 ```
 
+## Basic Agent Types
+
+Before diving into triage, let's explore the three fundamental agent types:
+
+### 1. Basic Agent (No Tools)
+
+```python
+from tangent import Agent, tangent
+
+client = tangent()
+
+basic_agent = Agent(
+    name="BasicAgent",
+    instructions="You are a helpful agent that responds politely to user input."
+)
 ```
-Hope glimmers brightly,
-New paths converge gracefully,
-What can I assist?
+
+### 2. Agent with Tools (Function Calls)
+
+```python
+def greet_user(name: str):
+    """
+    Greet a user by name.
+    """
+    return f"Hello, {name}! Hope you're having a great day."
+
+tool_agent = Agent(
+    name="ToolAgent",
+    instructions="You can greet users by name using greet_user().",
+    functions=[greet_user]
+)
+```
+
+### 3. Agent with Embeddings
+
+```python
+from tangent.types import EmbeddingConfig, QdrantConfig
+from tangent.embeddings import DocumentStore
+
+# Configure embeddings
+embedding_config = EmbeddingConfig(
+    model="text-embedding-3-large",
+    vector_db=QdrantConfig(
+        collection_name="my_collection",
+        url="localhost",
+        port=6333
+    )
+)
+
+# Set up document store
+doc_store = DocumentStore(
+    documents_path="path/to/docs",
+    config=embedding_config
+)
+
+def search_docs(query: str, top_k: int = 3) -> Result:
+    try:
+        results = doc_store.search(query, top_k)
+        text_results = "\n\n".join(doc.text for doc in results)
+        return Result(value=text_results)
+    except Exception as e:
+        return Result(value=f"Error: {e}")
+
+embedding_agent = Agent(
+    name="EmbeddingAgent",
+    instructions="You can answer user questions by looking up documents.",
+    functions=[search_docs]
+)
 ```
 
 ## Core Concepts
@@ -291,85 +340,9 @@ The triage agent will automatically:
 3. Add transfer back capability
 4. Update its instructions with agent information
 
-### Detailed Triage Agent Guide
+# Detailed Triage Agent Guide
 
-Welcome to the comprehensive guide for building and running triage (orchestration) agents with Tangent. This section provides an in-depth look at creating, configuring, and running triage agents.
-
-#### Prerequisites
-
-- **Python 3.10+** (Tangent requires 3.10 or higher)
-- The **Tangent** library installed
-- Basic understanding of agent-based systems
-
-#### Basic Agent Types
-
-Before diving into triage, let's explore the three fundamental agent types:
-
-##### 1. Basic Agent (No Tools)
-
-```python
-from tangent import Agent, tangent
-
-client = tangent()
-
-basic_agent = Agent(
-    name="BasicAgent",
-    instructions="You are a helpful agent that responds politely to user input."
-)
-```
-
-##### 2. Agent with Tools (Function Calls)
-
-```python
-def greet_user(name: str):
-    """
-    Greet a user by name.
-    """
-    return f"Hello, {name}! Hope you're having a great day."
-
-tool_agent = Agent(
-    name="ToolAgent",
-    instructions="You can greet users by name using greet_user().",
-    functions=[greet_user]
-)
-```
-
-##### 3. Agent with Embeddings
-
-```python
-from tangent.types import EmbeddingConfig, QdrantConfig
-from tangent.embeddings import DocumentStore
-
-# Configure embeddings
-embedding_config = EmbeddingConfig(
-    model="text-embedding-3-large",
-    vector_db=QdrantConfig(
-        collection_name="my_collection",
-        url="localhost",
-        port=6333
-    )
-)
-
-# Set up document store
-doc_store = DocumentStore(
-    documents_path="path/to/docs",
-    config=embedding_config
-)
-
-def search_docs(query: str, top_k: int = 3) -> Result:
-    try:
-        results = doc_store.search(query, top_k)
-        text_results = "\n\n".join(doc.text for doc in results)
-        return Result(value=text_results)
-    except Exception as e:
-        return Result(value=f"Error: {e}")
-
-embedding_agent = Agent(
-    name="EmbeddingAgent",
-    instructions="You can answer user questions by looking up documents.",
-    functions=[search_docs]
-)
-```
+Comprehensive guide for building and running triage (orchestration) agents with Tangent. This section provides an in-depth look at creating, configuring, and running triage agents.
 
 #### Triage Agent Implementation
 
