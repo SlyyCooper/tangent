@@ -3,7 +3,7 @@
 </div>
 
 <div align="center">
-  <img src="public/tangent.webp" alt="Tangent" width="800" height="200" style="object-fit: contain;"/>
+  <img src="public/tangent.webp" alt="Tangent" width="600"/>
 </div>
 
 
@@ -152,7 +152,7 @@ def greet(name, age: int, location: str = "New York"):
       age: Age of the user.
       location: Best place on earth.
    """
-   print(f"Hello {name}, glad you're {age} in {location}!")
+   print(f"Hello {name}, glad you are {age} in {location}!")
 ```
 
 ```javascript
