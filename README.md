@@ -5,6 +5,7 @@
 <div align="center">
   <img src="public/tangent.webp" alt="Tangent" width="600"/>
 </div>
+
 *Inspired by [OpenAI's Swarm](https://github.com/openai/swarm)*
 
 > A lightweight, ergonomic framework for building and orchestrating multi-agent systems. Created by [SlyyCooper](https://github.com/SlyyCooper).
