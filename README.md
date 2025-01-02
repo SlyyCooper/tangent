@@ -1,26 +1,54 @@
-# 🦊 Tangent
+<div align="center">
+  <h1>🦊 TANGENT</h1>
+</div>
+
+<div align="center">
+  <img src="public/tangent.webp" alt="Tangent" width="1200" height="200" style="object-fit: contain;"/>
+</div>
+
+
+
 
 *Inspired by [OpenAI's Swarm](https://github.com/openai/swarm)*
 
 > A lightweight, ergonomic framework for building and orchestrating multi-agent systems. Created by [SlyyCooper](https://github.com/SlyyCooper).
+
+Tangent focuses on making agent **coordination** and **execution** lightweight, highly controllable, and easily testable.
+
+It accomplishes this through three primitive abstractions:
+1. `Agent`s (encompassing instructions and tools)
+2. **Handoffs** (allowing agents to transfer control)
+3. **Triage** (automatic orchestration and routing)
+
+These primitives are powerful enough to express rich dynamics between tools and networks of agents, allowing you to build scalable, real-world solutions while avoiding a steep learning curve.
+
+> [!NOTE]
+> tangent Agents are not related to Assistants in the Assistants API. They are named similarly for convenience, but are otherwise completely unrelated. tangent is entirely powered by the Chat Completions API and is hence stateless between calls.
+
+## Important Notes
+
+- **Model Support**: Uses `gpt-4o` as the default model (GPT-4 is deprecated in this codebase)
+- **Embedding Model**: Default is `text-embedding-3-large`
+- **Vector Database Support**: 
+  - Qdrant (default)
+  - Pinecone
+  - Custom implementations
 
 ## Install
 
 Requires Python 3.10+
 
 ```shell
-pip install git+ssh://git@github.com/SlyyCooper/tangent.git
+# SSH installation
+pip install git+ssh://git@github.com/SlyyCooper/tangent_agents.git
+
+# HTTPS installation
+pip install git+https://github.com/SlyyCooper/tangent_agents.git
 ```
 
-or
+## Quick Start Example
 
-```shell
-pip install git+https://github.com/SlyyCooper/tangent.git
-```
-
-## Usage
-
-### Basic Agent Example
+Here's a basic example to show how to use Tangent:
 
 ```python
 from tangent import tangent, Agent
@@ -55,147 +83,15 @@ New paths converge gracefully,
 What can I assist?
 ```
 
-### Triage Agent Example
+## Core Concepts
 
-The triage agent acts as an orchestrator, automatically managing and routing requests to specialized agents:
-
-```python
-from tangent import Agent
-from tangent.triage.agent import create_triage_agent
-
-# Create specialized agents
-web_search_agent = Agent(
-    name="Web Search Agent",
-    instructions="Search the internet for information",
-    functions=[web_search],
-    triage_assignment="Research Assistant"  # Assign to triage agent
-)
-
-docs_agent = Agent(
-    name="Document Assistant",
-    instructions="Search through our document collection",
-    functions=[search_documents],
-    triage_assignment="Research Assistant"
-)
-
-# Create the triage agent
-triage_agent = create_triage_agent(
-    name="Research Assistant",
-    instructions="""Route requests to appropriate specialized agents:
-    - Web searches -> Web Search Agent
-    - Document queries -> Document Assistant"""
-)
-
-# The triage agent will automatically:
-# 1. Discover assigned agents
-# 2. Create transfer functions
-# 3. Route requests appropriately
-```
-
-Key features of the triage agent:
-- Automatic agent discovery via `triage_assignment`
-- Dynamic transfer function creation
-- Automatic transfer back functionality
-- Context preservation across transfers
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Examples](#examples)
-- [Documentation](#documentation)
-  - [Running tangent](#running-tangent)
-  - [Agents](#agents)
-  - [Functions](#functions)
-  - [Streaming](#streaming)
-  - [Triage Agent](#triage-agent)
-- [Evaluations](#evaluations)
-- [Utils](#utils)
-
-# Overview
-
-tangent focuses on making agent **coordination** and **execution** lightweight, highly controllable, and easily testable.
-
-It accomplishes this through three primitive abstractions:
-1. `Agent`s (encompassing instructions and tools)
-2. **Handoffs** (allowing agents to transfer control)
-3. **Triage** (automatic orchestration and routing)
-
-These primitives are powerful enough to express rich dynamics between tools and networks of agents, allowing you to build scalable, real-world solutions while avoiding a steep learning curve.
-
-> [!NOTE]
-> tangent Agents are not related to Assistants in the Assistants API. They are named similarly for convenience, but are otherwise completely unrelated. tangent is entirely powered by the Chat Completions API and is hence stateless between calls.
-
-## Why tangent
-
-tangent explores patterns that are lightweight, scalable, and highly customizable by design. Approaches similar to tangent are best suited for situations dealing with a large number of independent capabilities and instructions that are difficult to encode into a single prompt.
-
-The Assistants API is a great option for developers looking for fully-hosted threads and built in memory management and retrieval. However, tangent is for developers curious to learn about multi-agent orchestration. tangent runs (almost) entirely on the client and, much like the Chat Completions API, does not store state between calls.
-
-# Examples
-
-Check out `/examples` for inspiration! Learn more about each one in its README.
-
-- [`basic`](examples/basic): Simple examples of fundamentals like setup, function calling, handoffs, and context variables
-- [`triage_agent`](examples/triage_agent): Example of automatic agent discovery and routing using the triage agent
-- [`weather_agent`](examples/weather_agent): Simple example of function calling
-- [`airline`](examples/airline): A multi-agent setup for handling different customer service requests in an airline context
-- [`support_bot`](examples/support_bot): A customer service bot which includes a user interface agent and a help center agent with several tools
-- [`personal_shopper`](examples/personal_shopper): A personal shopping agent that can help with making sales and refunding orders
-
-# Documentation
-
-![tangent Diagram](assets/tangent_diagram.png)
-
-## Running tangent
-
-Start by instantiating a tangent client (which internally just instantiates an `OpenAI` client).
-
-```python
-from tangent import tangent
-
-client = tangent()
-```
-
-### `client.run()`
-
-tangent's `run()` function is analogous to the `chat.completions.create()` function in the Chat Completions API – it takes `messages` and returns `messages` and saves no state between calls. Importantly, however, it also handles Agent function execution, hand-offs, context variable references, and can take multiple turns before returning to the user.
-
-At its core, tangent's `client.run()` implements the following loop:
-
-1. Get a completion from the current Agent
-2. Execute tool calls and append results
-3. Switch Agent if necessary
-4. Update context variables, if necessary
-5. If no new function calls, return
-
-#### Arguments
-
-| Argument              | Type    | Description                                                                                                                                            | Default        |
-| --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
-| **agent**             | `Agent` | The (initial) agent to be called.                                                                                                                      | (required)     |
-| **messages**          | `List`  | A list of message objects, identical to [Chat Completions `messages`](https://platform.openai.com/docs/api-reference/chat/create#chat-create-messages) | (required)     |
-| **context_variables** | `dict`  | A dictionary of additional context variables, available to functions and Agent instructions                                                            | `{}`           |
-| **max_turns**         | `int`   | The maximum number of conversational turns allowed                                                                                                     | `float("inf")` |
-| **model_override**    | `str`   | An optional string to override the model being used by an Agent                                                                                        | `None`         |
-| **execute_tools**     | `bool`  | If `False`, interrupt execution and immediately returns `tool_calls` message when an Agent tries to call a function                                    | `True`         |
-| **stream**            | `bool`  | If `True`, enables streaming responses                                                                                                                 | `False`        |
-| **debug**             | `bool`  | If `True`, enables debug logging                                                                                                                       | `False`        |
-
-#### `Response` Fields
-
-| Field                 | Type    | Description                                                                                                                                                                                                                                                                  |
-| --------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **messages**          | `List`  | A list of message objects generated during the conversation. Very similar to [Chat Completions `messages`](https://platform.openai.com/docs/api-reference/chat/create#chat-create-messages), but with a `sender` field indicating which `Agent` the message originated from. |
-| **agent**             | `Agent` | The last agent to handle a message.                                                                                                                                                                                                                                          |
-| **context_variables** | `dict`  | The same as the input variables, plus any changes.                                                                                                                                                                                                                           |
-
-## Agents
+### Agents
 
 An `Agent` simply encapsulates a set of `instructions` with a set of `functions` (plus some additional settings below), and has the capability to hand off execution to another `Agent`.
 
 While it's tempting to personify an `Agent` as "someone who does X", it can also be used to represent a very specific workflow or step defined by a set of `instructions` and `functions` (e.g. a set of steps, a complex retrieval, single step of data transformation, etc). This allows `Agent`s to be composed into a network of "agents", "workflows", and "tasks", all represented by the same primitive.
 
-### `Agent` Fields
+#### `Agent` Fields
 
 | Field                | Type                     | Description                                                                   | Default                      |
 | -------------------- | ------------------------ | ----------------------------------------------------------------------------- | ---------------------------- |
@@ -205,6 +101,147 @@ While it's tempting to personify an `Agent` as "someone who does X", it can also
 | **functions**        | `List`                   | A list of functions that the agent can call.                                  | `[]`                         |
 | **tool_choice**      | `str`                    | The tool choice for the agent, if any.                                        | `None`                       |
 | **triage_assignment**| `str`                    | The name of the triage agent this agent is assigned to.                       | `None`                       |
+
+### Functions
+
+- tangent `Agent`s can call python functions directly.
+- Function should usually return a `str` (values will be attempted to be cast as a `str`).
+- If a function returns an `Agent`, execution will be transferred to that `Agent`.
+- If a function defines a `context_variables` parameter, it will be populated by the `context_variables` passed into `client.run()`.
+
+```python
+def greet(context_variables, language):
+   user_name = context_variables["user_name"]
+   greeting = "Hola" if language.lower() == "spanish" else "Hello"
+   print(f"{greeting}, {user_name}!")
+   return "Done"
+
+agent = Agent(
+   functions=[greet]
+)
+
+client.run(
+   agent=agent,
+   messages=[{"role":"user", "content": "Usa greet() por favor."}],
+   context_variables={"user_name": "John"}
+)
+```
+
+```
+Hola, John!
+```
+
+- If an `Agent` function call has an error (missing function, wrong argument, error) an error response will be appended to the chat so the `Agent` can recover gracefully.
+- If multiple functions are called by the `Agent`, they will be executed in that order.
+
+#### Function Schemas
+
+tangent automatically converts functions into a JSON Schema that is passed into Chat Completions `tools`.
+
+- Docstrings are turned into the function `description`.
+- Parameters without default values are set to `required`.
+- Type hints are mapped to the parameter's `type` (and default to `string`).
+- Per-parameter descriptions are not explicitly supported, but should work similarly if just added in the docstring. (In the future docstring argument parsing may be added.)
+
+```python
+def greet(name, age: int, location: str = "New York"):
+   """Greets the user. Make sure to get their name and age before calling.
+
+   Args:
+      name: Name of the user.
+      age: Age of the user.
+      location: Best place on earth.
+   """
+   print(f"Hello {name}, glad you're {age} in {location}!")
+```
+
+```javascript
+{
+   "type": "function",
+   "function": {
+      "name": "greet",
+      "description": "Greets the user. Make sure to get their name and age before calling.\n\nArgs:\n   name: Name of the user.\n   age: Age of the user.\n   location: Best place on earth.",
+      "parameters": {
+         "type": "object",
+         "properties": {
+            "name": {"type": "string"},
+            "age": {"type": "integer"},
+            "location": {"type": "string"}
+         },
+         "required": ["name", "age"]
+      }
+   }
+}
+```
+
+### Handoffs
+
+An `Agent` can hand off to another `Agent` by returning it in a `function`.
+
+```python
+sales_agent = Agent(name="Sales Agent")
+
+def transfer_to_sales():
+   return sales_agent
+
+agent = Agent(functions=[transfer_to_sales])
+
+response = client.run(agent, [{"role":"user", "content":"Transfer me to sales."}])
+print(response.agent.name)
+```
+
+```
+Sales Agent
+```
+
+### Context Variables
+
+It can also update the `context_variables` by returning a more complete `Result` object. This can also contain a `value` and an `agent`, in case you want a single function to return a value, update the agent, and update the context variables (or any subset of the three).
+
+```python
+sales_agent = Agent(name="Sales Agent")
+
+def talk_to_sales():
+   print("Hello, World!")
+   return Result(
+       value="Done",
+       agent=sales_agent,
+       context_variables={"department": "sales"}
+   )
+
+agent = Agent(functions=[talk_to_sales])
+
+response = client.run(
+   agent=agent,
+   messages=[{"role": "user", "content": "Transfer me to sales"}],
+   context_variables={"user_name": "John"}
+)
+print(response.agent.name)
+print(response.context_variables)
+```
+
+```
+Sales Agent
+{'department': 'sales', 'user_name': 'John'}
+```
+
+> [!NOTE]
+> If an `Agent` calls multiple functions to hand-off to an `Agent`, only the last handoff function will be used.
+
+### Streaming
+
+```python
+stream = client.run(agent, messages, stream=True)
+for chunk in stream:
+   print(chunk)
+```
+
+Uses the same events as [Chat Completions API streaming](https://platform.openai.com/docs/api-reference/streaming). See `process_and_print_streaming_response` in `/tangent/repl/repl.py` as an example.
+
+Two new event types have been added:
+
+- `{"delim":"start"}` and `{"delim":"end"}`, to signal each time an `Agent` handles a single message (response or function call). This helps identify switches between `Agent`s.
+- `{"response": Response}` will return a `Response` object at the end of a stream with the aggregated (complete) response, for convenience.
 
 ## Triage Agent
 
@@ -252,150 +289,351 @@ The triage agent will automatically:
 3. Add transfer back capability
 4. Update its instructions with agent information
 
-## Functions
+### Detailed Triage Agent Guide
 
-- tangent `Agent`s can call python functions directly.
-- Function should usually return a `str` (values will be attempted to be cast as a `str`).
-- If a function returns an `Agent`, execution will be transferred to that `Agent`.
-- If a function defines a `context_variables` parameter, it will be populated by the `context_variables` passed into `client.run()`.
+Welcome to the comprehensive guide for building and running triage (orchestration) agents with Tangent. This section provides an in-depth look at creating, configuring, and running triage agents.
+
+#### Prerequisites
+
+- **Python 3.10+** (Tangent requires 3.10 or higher)
+- The **Tangent** library installed
+- Basic understanding of agent-based systems
+
+#### Basic Agent Types
+
+Before diving into triage, let's explore the three fundamental agent types:
+
+##### 1. Basic Agent (No Tools)
 
 ```python
-def greet(context_variables, language):
-   user_name = context_variables["user_name"]
-   greeting = "Hola" if language.lower() == "spanish" else "Hello"
-   print(f"{greeting}, {user_name}!")
-   return "Done"
+from tangent import Agent, tangent
 
-agent = Agent(
-   functions=[greet]
+client = tangent()
+
+basic_agent = Agent(
+    name="BasicAgent",
+    instructions="You are a helpful agent that responds politely to user input."
+)
+```
+
+##### 2. Agent with Tools (Function Calls)
+
+```python
+def greet_user(name: str):
+    """
+    Greet a user by name.
+    """
+    return f"Hello, {name}! Hope you're having a great day."
+
+tool_agent = Agent(
+    name="ToolAgent",
+    instructions="You can greet users by name using greet_user().",
+    functions=[greet_user]
+)
+```
+
+##### 3. Agent with Embeddings
+
+```python
+from tangent.types import EmbeddingConfig, QdrantConfig
+from tangent.embeddings import DocumentStore
+
+# Configure embeddings
+embedding_config = EmbeddingConfig(
+    model="text-embedding-3-large",
+    vector_db=QdrantConfig(
+        collection_name="my_collection",
+        url="localhost",
+        port=6333
+    )
 )
 
-client.run(
-   agent=agent,
-   messages=[{"role":"user", "content": "Usa greet() por favor."}],
-   context_variables={"user_name": "John"}
+# Set up document store
+doc_store = DocumentStore(
+    documents_path="path/to/docs",
+    config=embedding_config
+)
+
+def search_docs(query: str, top_k: int = 3) -> Result:
+    try:
+        results = doc_store.search(query, top_k)
+        text_results = "\n\n".join(doc.text for doc in results)
+        return Result(value=text_results)
+    except Exception as e:
+        return Result(value=f"Error: {e}")
+
+embedding_agent = Agent(
+    name="EmbeddingAgent",
+    instructions="You can answer user questions by looking up documents.",
+    functions=[search_docs]
 )
 ```
 
-```
-Hola, John!
-```
+#### Triage Agent Implementation
 
-- If an `Agent` function call has an error (missing function, wrong argument, error) an error response will be appended to the chat so the `Agent` can recover gracefully.
-- If multiple functions are called by the `Agent`, they will be executed in that order.
+The triage agent serves as an orchestrator, managing and routing requests to specialized agents. Here's how to set it up:
 
-### Handoffs and Updating Context Variables
-
-An `Agent` can hand off to another `Agent` by returning it in a `function`.
+##### 1. Creating the Triage Agent
 
 ```python
-sales_agent = Agent(name="Sales Agent")
+from tangent.triage.agent import create_triage_agent
 
-def transfer_to_sales():
-   return sales_agent
-
-agent = Agent(functions=[transfer_to_sales])
-
-response = client.run(agent, [{"role":"user", "content":"Transfer me to sales."}])
-print(response.agent.name)
+triage_agent = create_triage_agent(
+    name="Triage Agent",
+    instructions="""You are the orchestrator. Route requests to specialized agents 
+    or handle them yourself.""",
+    auto_discover=True  # Auto-discovers assigned agents
+)
 ```
 
-```
-Sales Agent
-```
-
-It can also update the `context_variables` by returning a more complete `Result` object. This can also contain a `value` and an `agent`, in case you want a single function to return a value, update the agent, and update the context variables (or any subset of the three).
+##### 2. Creating Specialized Agents
 
 ```python
-sales_agent = Agent(name="Sales Agent")
+# Sales Agent Example
+sales_agent = Agent(
+    name="Sales Agent",
+    instructions="Handle sales inquiries. Offer products and manage orders.",
+    functions=[offer_discount],  # Your sales-specific tools
+    triage_assignment="Triage Agent"  # Must match triage agent's name
+)
 
-def talk_to_sales():
-   print("Hello, World!")
-   return Result(
-       value="Done",
-       agent=sales_agent,
-       context_variables={"department": "sales"}
-   )
+# Document Assistant Example
+docs_agent = Agent(
+    name="Document Assistant",
+    instructions="Search and provide information from our document base.",
+    functions=[search_documents],
+    triage_assignment="Triage Agent"
+)
+```
 
-agent = Agent(functions=[talk_to_sales])
+#### How Triage Works
 
+1. **Discovery**: The triage agent automatically discovers agents assigned to it via `triage_assignment`
+2. **Transfer Functions**: Creates transfer functions for each discovered agent
+3. **Routing**: Analyzes requests and routes to appropriate specialized agents
+4. **Context**: Maintains conversation context across transfers
+
+#### Triage Flow Example
+
+```python
+# 1. User sends message to triage agent
 response = client.run(
-   agent=agent,
-   messages=[{"role": "user", "content": "Transfer me to sales"}],
-   context_variables={"user_name": "John"}
+    agent=triage_agent,
+    messages=[{"role": "user", "content": "I want to buy something"}]
 )
-print(response.agent.name)
-print(response.context_variables)
+
+# 2. Triage agent analyzes and transfers to sales agent if appropriate
+# 3. Sales agent handles request with its specialized tools
+# 4. Sales agent can transfer back when done
 ```
 
-```
-Sales Agent
-{'department': 'sales', 'user_name': 'John'}
-```
+#### Advanced Features
 
-> [!NOTE]
-> If an `Agent` calls multiple functions to hand-off to an `Agent`, only the last handoff function will be used.
+##### 1. Embedding Integration
 
-### Function Schemas
-
-tangent automatically converts functions into a JSON Schema that is passed into Chat Completions `tools`.
-
-- Docstrings are turned into the function `description`.
-- Parameters without default values are set to `required`.
-- Type hints are mapped to the parameter's `type` (and default to `string`).
-- Per-parameter descriptions are not explicitly supported, but should work similarly if just added in the docstring. (In the future docstring argument parsing may be added.)
+For knowledge-based agents:
 
 ```python
-def greet(name, age: int, location: str = "New York"):
-   """Greets the user. Make sure to get their name and age before calling.
+from tangent.types import Result, QdrantConfig, EmbeddingConfig
+from tangent.embeddings import DocumentStore
 
-   Args:
-      name: Name of the user.
-      age: Age of the user.
-      location: Best place on earth.
-   """
-   print(f"Hello {name}, glad you are {age} in {location}!")
+# Set up document store with configuration
+doc_store = DocumentStore(
+    documents_path="path/to/docs",
+    config=EmbeddingConfig(
+        model="text-embedding-3-large",
+        vector_db=QdrantConfig(
+            collection_name="my_docs",
+            url="localhost",
+            port=6333
+        )
+    )
+)
+
+def search_documents(query: str, top_k: int = 3) -> Result:
+    try:
+        results = doc_store.search(query, top_k)
+        formatted_results = "\n\n".join([
+            f"Document: {doc.metadata.get('source', 'Unknown')}\n"
+            f"Content: {doc.text}"
+            for doc in results
+        ])
+        return Result(value=formatted_results)
+    except Exception as e:
+        return Result(value=f"Error searching documents: {e}")
+
+# Create knowledge-based agent
+docs_agent = Agent(
+    name="Document Assistant",
+    instructions="You have access to our document knowledge base.",
+    functions=[search_documents],
+    triage_assignment="Triage Agent"
+)
 ```
 
-```javascript
-{
-   "type": "function",
-   "function": {
-      "name": "greet",
-      "description": "Greets the user. Make sure to get their name and age before calling.\n\nArgs:\n   name: Name of the user.\n   age: Age of the user.\n   location: Best place on earth.",
-      "parameters": {
-         "type": "object",
-         "properties": {
-            "name": {"type": "string"},
-            "age": {"type": "integer"},
-            "location": {"type": "string"}
-         },
-         "required": ["name", "age"]
-      }
-   }
-}
-```
+## Document Processing
 
-## Streaming
+The DocumentStore supports multiple formats:
+- `.txt` (plain text)
+- `.md` (markdown)
+- `.pdf` (PDF documents)
+- `.docx` (Word documents)
+- `.json` (JSON with content/metadata)
+
+Features:
+- Automatic document reading and chunking
+- Automatic embedding generation
+- Vector database storage (Qdrant/Pinecone)
+- Semantic search capabilities
+
+## Advanced Topics
+
+### Multi-Turn Conversations & Context
+
+#### Multi-Turn Basics
+
+Tangent can handle multi-turn conversations within a single `client.run(...)` call. By default, the code in `core.py` loops until there are no more function calls or until `max_turns` is reached.
+
+- **Each time** the model responds, Tangent checks if it wants to call any tools (function calls).
+- If so, it executes them and appends the results to the conversation.
+- The conversation can continue multiple times until the model stops calling new tools.
+
+#### Passing Context History
+
+Messages from previous user interactions are appended to the `messages` list. You can keep adding new user messages to `messages` to preserve a conversation's history. Tangent automatically includes them in the next call.
+
+**Example**:
 
 ```python
-stream = client.run(agent, messages, stream=True)
-for chunk in stream:
-   print(chunk)
+messages = []
+while True:
+    user_input = input("User: ")
+    messages.append({"role": "user", "content": user_input})
+    
+    response = client.run(
+        agent=my_agent,
+        messages=messages
+    )
+    
+    # The agent's final response:
+    print(response.messages[-1]["content"])
+    messages.extend(response.messages)  # preserve them for next turn
 ```
 
-Uses the same events as [Chat Completions API streaming](https://platform.openai.com/docs/api-reference/streaming). See `process_and_print_streaming_response` in `/tangent/repl/repl.py` as an example.
+#### Passing Context Between Agents
 
-Two new event types have been added:
+When an agent **hands off** to another agent (by returning an `Agent` in a function call or using triage-based `transfer`), the conversation's **`context_variables`** also get passed along. If your agent function returns a `Result` with `context_variables`, those updates are merged into the context before the next agent takes control.
 
-- `{"delim":"start"}` and `{"delim":"end"}`, to signal each time an `Agent` handles a single message (response or function call). This helps identify switches between `Agent`s.
-- `{"response": Response}` will return a `Response` object at the end of a stream with the aggregated (complete) response, for convenience.
+**Example**:
+```python
+def transfer_with_context():
+    """
+    Transfer to Sales Agent, but also store user preference in context.
+    """
+    return Result(
+        value="Switching you to Sales.",
+        agent=sales_agent,
+        context_variables={"preferred_color": "blue"}
+    )
+```
 
-# Evaluations
+### Timed or Event-Triggered Agents
+
+Tangent itself is stateless between calls, but you can build scheduling or triggers around it:
+
+- **External Cron/Timer**: At a scheduled time, run a function that calls `client.run(...)` with a specific agent (e.g., a "Reminder Agent").
+- **Event-Driven**: If an external event or database insert triggers something, you can programmatically call `client.run(...)` with that agent.
+
+**Example** (pseudo-code):
+
+```python
+import time
+
+while True:
+    time.sleep(60)  # check every minute
+    if check_database_for_updates():
+        messages = [{"role": "user", "content": "New data arrived in DB, handle it."}]
+        response = client.run(agent=db_agent, messages=messages)
+        ...
+```
+
+### Connecting Agents to a Database
+
+Agents can call **tools** (Python functions) that interact with any database. For instance:
+
+```python
+def store_in_db(data: dict):
+    """
+    Insert data into our MySQL database.
+    """
+    # your DB logic here...
+    return "Data stored!"
+```
+
+Attach to an agent:
+
+```python
+db_agent = Agent(
+    name="Database Agent",
+    instructions="You can store data in our DB using store_in_db().",
+    functions=[store_in_db]
+)
+```
+
+### Agent Activation on Specific Conditions
+
+If you want an agent to be "activated" only when certain conditions are met, you have several options:
+
+1. **Triage Logic**: The triage agent can call a specialized agent only if the user's request matches certain instructions.
+2. **Model Logic**: The model can interpret requests and call the appropriate function or transfer function automatically.
+3. **Manual Logic**: You can filter user requests yourself in Python and decide to call `client.run(..., agent=some_agent)` only if certain text or conditions match.
+
+For instance, you might parse user input for keywords like "urgent" or "report," then decide to run a specialized "Alert Agent."
+
+## Examples
+
+Check out `/examples` for inspiration! Learn more about each one in its README.
+
+
+- [`triage_agent`](examples/triage_agent): Example of automatic agent discovery and routing using the triage agent. Passing users to the 'websearch_agent'or 'embedding_agent' based on their request.
+- [`websearch_agent`](examples/websearch_agent): Example of an agent that can search the web and summarize results
+- [`embedding_agent`](examples/embedding_agent): Example of using embeddings for semantic search and document retrieval
+
+## Evaluations
 
 Evaluations are crucial to any project, and we encourage developers to bring their own eval suites to test the performance of their tangents. For reference, we have some examples for how to eval tangent in the `airline`, `weather_agent` and `triage_agent` quickstart examples. See the READMEs for more details.
 
-# Utils
+### Testing and Evaluation
+
+Create test cases in `evals.py`:
+
+```python
+import pytest
+from tangent import tangent
+
+def test_sales_routing():
+    client = tangent()
+    response = client.run(
+        agent=triage_agent,
+        messages=[{"role": "user", "content": "I want to buy shoes"}]
+    )
+    assert response.agent.name == "Sales Agent"
+
+def test_document_routing():
+    client = tangent()
+    response = client.run(
+        agent=triage_agent,
+        messages=[{"role": "user", "content": "What's in our documentation?"}]
+    )
+    assert response.agent.name == "Document Assistant"
+```
+
+Run tests with:
+```bash
+pytest evals.py
+```
+
+## Utils
 
 Use the `run_tangent_loop` to test out your tangent! This will run a REPL on your command line. Supports streaming.
 
@@ -404,3 +642,30 @@ from tangent.repl import run_tangent_loop
 ...
 run_tangent_loop(agent, stream=True)
 ```
+
+## FAQ / Troubleshooting
+
+1. **How do I preserve multi-turn context across multiple calls?**  
+   - Ensure you keep appending the returned messages (from `response.messages`) to your local `messages` list. Then pass that updated `messages` list to the next `client.run(...)`.  
+
+2. **How do I pass context from one agent to another automatically?**  
+   - If an agent calls `return Result(agent=other_agent, context_variables={"foo": "bar"})`, the conversation automatically switches to `other_agent` and merges `{"foo": "bar"}` into `context_variables`.
+
+3. **Can I connect multiple agents to an external database?**  
+   - Yes. Each agent can have one or more functions that interface with your database. The model can call them automatically via function calling.
+
+### Troubleshooting
+
+1. **Agent Discovery Issues**
+   - Verify `triage_assignment` matches triage agent name exactly
+   - Ensure `auto_discover=True` is set
+   - Check agent imports are in scope for `sys.modules`
+
+2. **Tool Execution Errors**
+   - Verify function names match exactly
+   - Check function signatures and docstrings
+   - Ensure all required parameters are provided
+
+3. **Model Configuration**
+   - Use `"gpt-4o"` (default) for best results
+   - GPT-4 is deprecated in this codebase
