@@ -146,7 +146,7 @@ While it's tempting to personify an `Agent` as "someone who does X", it can also
 | **embedding_config** | `str`                    | The name of the embedding config for the agent, if any.                       | `None`                       |
 | **embedding_manager**| `str`                    | The name of the embedding manager for the agent, if any.                      | `None`                       |
 
-### Functions
+## Functions
 
 - tangent `Agent`s can call python functions directly.
 - Function should usually return a `str` (values will be attempted to be cast as a `str`).
