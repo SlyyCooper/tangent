@@ -15,7 +15,9 @@
 It accomplishes this through three primitive abstractions:
 1. **Agents** (encompassing instructions and tools)
 2. **Handoffs** (allowing agents to transfer control)
-3. **Triage** (automatic orchestration and routing)
+3. **Tools** (encompassing functions and tools)
+4. **Embedding** (encompassing document management and search)
+5. **Triage** (automatic orchestration and routing)
 
 These primitives are powerful enough to express rich dynamics between tools and networks of agents, allowing you to build scalable, real-world solutions while avoiding a steep learning curve.
 
@@ -32,543 +34,250 @@ pip install git+ssh://git@github.com/SlyyCooper/tangent.git
 pip install git+https://github.com/SlyyCooper/tangent.git
 ```
 
-## Quick Start Example
+# Quick Start
 
-Here's a basic example to show how to use Tangent:
-
+## Create a new agent
 ```python
-from tangent import tangent, Agent
+from tangent import tangent, Agent, run_tangent_loop
 
 client = tangent()
-
-chat_agent = Agent(
-    name="ChatBot",
-    instructions="""You are a friendly and helpful assistant. 
-    Keep responses clear and concise."""
-)
-
-response = client.run(
-    agent=chat_agent,
-    messages=[{"role": "user", "content": "Hello! How can you help me today?"}]
-)
-
-print(response.messages[-1]["content"])
-```
-
-## Basic Agent Types
-
-Before diving into triage, let's explore the three fundamental agent types:
-
-### 1. Basic Agent (No Tools)
-
-```python
-from tangent import Agent, tangent
-
-client = tangent()
-
-basic_agent = Agent(
-    name="BasicAgent",
-    instructions="You are a helpful agent that responds politely to user input."
-)
-```
-
-### 2. Agent with Tools (Function Calls)
-
-```python
-def greet_user(name: str):
-    """
-    Greet a user by name.
-    """
-    return f"Hello, {name}! Hope you're having a great day."
-
-tool_agent = Agent(
-    name="ToolAgent",
-    instructions="You can greet users by name using greet_user().",
-    functions=[greet_user]
-)
-```
-
-### 3. Agent with Embeddings
-
-```python
-from tangent.types import EmbeddingConfig, QdrantConfig
-from tangent.embeddings import DocumentStore
-
-# Configure embeddings
-embedding_config = EmbeddingConfig(
-    model="text-embedding-3-large",
-    vector_db=QdrantConfig(
-        collection_name="my_collection",
-        url="localhost",
-        port=6333
-    )
-)
-
-# Set up document store
-doc_store = DocumentStore(
-    documents_path="path/to/docs",
-    config=embedding_config
-)
-
-def search_docs(query: str, top_k: int = 3) -> Result:
-    try:
-        results = doc_store.search(query, top_k)
-        text_results = "\n\n".join(doc.text for doc in results)
-        return Result(value=text_results)
-    except Exception as e:
-        return Result(value=f"Error: {e}")
-
-embedding_agent = Agent(
-    name="EmbeddingAgent",
-    instructions="You can answer user questions by looking up documents.",
-    functions=[search_docs]
-)
-```
-
-## Core Concepts
-
-### Agents
-
-An `Agent` simply encapsulates a set of `instructions` with a set of `functions` (plus some additional settings below), and has the capability to hand off execution to another `Agent`.
-
-While it's tempting to personify an `Agent` as "someone who does X", it can also be used to represent a very specific workflow or step defined by a set of `instructions` and `functions` (e.g. a set of steps, a complex retrieval, single step of data transformation, etc). This allows `Agent`s to be composed into a network of "agents", "workflows", and "tasks", all represented by the same primitive.
-
-#### `Agent` Fields
-
-| Field                | Type                     | Description                                                                   | Default                      |
-| -------------------- | ------------------------ | ----------------------------------------------------------------------------- | ---------------------------- |
-| **name**             | `str`                    | The name of the agent.                                                        | `"Agent"`                    |
-| **model**            | `str`                    | The model to be used by the agent.                                            | `"gpt-4o"`                   |
-| **instructions**     | `str` or `func() -> str` | Instructions for the agent, can be a string or a callable returning a string. | `"You are a helpful agent."` |
-| **functions**        | `List`                   | A list of functions that the agent can call.                                  | `[]`                         |
-| **tool_choice**      | `str`                    | The tool choice for the agent, if any.                                        | `None`                       |
-| **triage_assignment**| `str`                    | The name of the triage agent this agent is assigned to.                       | `None`                       |
-| **embedding_config** | `str`                    | The name of the embedding config for the agent, if any.                       | `None`                       |
-| **embedding_manager**| `str`                    | The name of the embedding manager for the agent, if any.                      | `None`                       |
-
-## Functions
-
-- tangent `Agent`s can call python functions directly.
-- Function should usually return a `str` (values will be attempted to be cast as a `str`).
-- If a function returns an `Agent`, execution will be transferred to that `Agent`.
-- If a function defines a `context_variables` parameter, it will be populated by the `context_variables` passed into `client.run()`.
-
-```python
-def greet(context_variables, language):
-   user_name = context_variables["user_name"]
-   greeting = "Hola" if language.lower() == "spanish" else "Hello"
-   print(f"{greeting}, {user_name}!")
-   return "Done"
 
 agent = Agent(
-   functions=[greet]
+    name="Basic Agent",
+    model="gpt-4o",
+    instructions="You are a simple chatbot that can respond to user requests."
 )
 
-client.run(
-   agent=agent,
-   messages=[{"role":"user", "content": "Usa greet() por favor."}],
-   context_variables={"user_name": "John"}
-)
+run_tangent_loop(agent, stream=True, debug=False)
 ```
 
+# tangent Python package - Detailed Overview
+
+## package file structure
 ```
-Hola, John!
-```
-
-- If an `Agent` function call has an error (missing function, wrong argument, error) an error response will be appended to the chat so the `Agent` can recover gracefully.
-- If multiple functions are called by the `Agent`, they will be executed in that order.
-
-### Function Schemas
-
-tangent automatically converts functions into a JSON Schema that is passed into Chat Completions `tools`.
-
-- Docstrings are turned into the function `description`.
-- Parameters without default values are set to `required`.
-- Type hints are mapped to the parameter's `type` (and default to `string`).
-- Per-parameter descriptions are not explicitly supported, but should work similarly if just added in the docstring. (In the future docstring argument parsing may be added.)
-
-```python
-def greet(name, age: int, location: str = "New York"):
-   """Greets the user. Make sure to get their name and age before calling.
-
-   Args:
-      name: Name of the user.
-      age: Age of the user.
-      location: Best place on earth.
-   """
-   print(f"Hello {name}, glad you are {age} in {location}!")
+ tangent/
+[A] ├── types.py 
+[B] ├── core.py
+[C] ├── util.py
+[D] ├── embeddings.py
+[E] ├── __init__.py 
+    ├── repl/
+[F] │   ├── __init__.py
+[G] │   └── repl.py
+    ├── tools/
+[H] │   ├── __init__.py
+[I] │   └── knowledge_base.py
+    ├── triage/
+[J] │   ├── __init__.py
+[K] │   ├── agent.py
+[L] │   └── utils.py
 ```
 
-```javascript
-{
-   "type": "function",
-   "function": {
-      "name": "greet",
-      "description": "Greets the user. Make sure to get their name and age before calling.\n\nArgs:\n   name: Name of the user.\n   age: Age of the user.\n   location: Best place on earth.",
-      "parameters": {
-         "type": "object",
-         "properties": {
-            "name": {"type": "string"},
-            "age": {"type": "integer"},
-            "location": {"type": "string"}
-         },
-         "required": ["name", "age"]
-      }
-   }
-}
-```
-
-> [!NOTE]
-> If an `Agent` calls multiple functions to hand-off to an `Agent`, only the last handoff function will be used.
-
-## Embeddings
-
-### Embedding Integration
-
-For knowledge-based agents:
-
-```python
-from tangent.types import Result, QdrantConfig, EmbeddingConfig
-from tangent.embeddings import DocumentStore
-
-# Set up document store with configuration
-doc_store = DocumentStore(
-    documents_path="path/to/docs",
-    config=EmbeddingConfig(
-        model="text-embedding-3-large",
-        vector_db=QdrantConfig(
-            collection_name="my_docs",
-            url="localhost",
-            port=6333
-        )
-    )
-)
-
-def search_documents(query: str, top_k: int = 3) -> Result:
-    try:
-        results = doc_store.search(query, top_k)
-        formatted_results = "\n\n".join([
-            f"Document: {doc.metadata.get('source', 'Unknown')}\n"
-            f"Content: {doc.text}"
-            for doc in results
-        ])
-        return Result(value=formatted_results)
-    except Exception as e:
-        return Result(value=f"Error searching documents: {e}")
-
-# Create knowledge-based agent
-docs_agent = Agent(
-    name="Document Assistant",
-    instructions="You have access to our document knowledge base.",
-    functions=[search_documents],
-    triage_assignment="Triage Agent"
-)
-```
-
-### Document Processing
-
-The DocumentStore supports multiple formats:
-- `.txt` (plain text)
-- `.md` (markdown)
-- `.pdf` (PDF documents)
-- `.docx` (Word documents)
-- `.json` (JSON with content/metadata)
-
-Features:
-- Automatic document reading and chunking
-- Automatic embedding generation
-- Vector database storage (Qdrant/Pinecone)
-- Semantic search capabilities
-
-## Multi-Turn Conversations
-
-### Multi-Turn Basics
-
-Tangent can handle multi-turn conversations within a single `client.run(...)` call. By default, the code in `core.py` loops until there are no more function calls or until `max_turns` is reached.
-
-- **Each time** the model responds, Tangent checks if it wants to call any tools (function calls).
-- If so, it executes them and appends the results to the conversation.
-- The conversation can continue multiple times until the model stops calling new tools.
-
-### Passing Context History
-
-Messages from previous user interactions are appended to the `messages` list. You can keep adding new user messages to `messages` to preserve a conversation's history. Tangent automatically includes them in the next call.
-
-**Example**:
-
-```python
-messages = []
-while True:
-    user_input = input("User: ")
-    messages.append({"role": "user", "content": user_input})
-    
-    response = client.run(
-        agent=my_agent,
-        messages=messages
-    )
-    
-    # The agent's final response:
-    print(response.messages[-1]["content"])
-    messages.extend(response.messages)  # preserve them for next turn
-```
-
-## Streaming
-
-```python
-stream = client.run(agent, messages, stream=True)
-for chunk in stream:
-   print(chunk)
-```
-
-Uses the same events as [Chat Completions API streaming](https://platform.openai.com/docs/api-reference/streaming). See `process_and_print_streaming_response` in `/tangent/repl/repl.py` as an example.
-
-Two new event types have been added:
-
-- `{"delim":"start"}` and `{"delim":"end"}`, to signal each time an `Agent` handles a single message (response or function call). This helps identify switches between `Agent`s.
-- `{"response": Response}` will return a `Response` object at the end of a stream with the aggregated (complete) response, for convenience.
-
-
-## Triage Agent
-
-The triage agent is a specialized orchestrator that automatically manages and routes requests to other agents. It provides:
-
-1. **Automatic Agent Discovery**
-   - Agents can be assigned to a triage agent using the `triage_assignment` field
-   - The triage agent automatically discovers and manages assigned agents
-
-2. **Dynamic Transfer Functions**
-   - Transfer functions are automatically created for each managed agent
-   - Each managed agent gets a transfer back function to return to the triage agent
-
-3. **Smart Routing**
-   - Routes requests to appropriate specialized agents based on their capabilities
-   - Maintains conversation context across transfers
-   - Can handle requests directly when no specialization is needed
-
-Below is a comprehensive guide for building and running triage (orchestration) agents with Tangent. This section provides an in-depth look at creating, configuring, and running triage agents.
-
-### Triage Agent Implementation
-
-##### 1. Creating the Triage Agent
-
-```python
-from tangent.triage.agent import create_triage_agent
-
-triage_agent = create_triage_agent(
-    name="Triage Agent",
-    instructions="""You are the orchestrator. Route requests to specialized agents 
-    or handle them yourself.""",
-    auto_discover=True  # Auto-discovers assigned agents
-)
-```
-
-##### 2. Assigning Agents to Triage Agent
-
-```python
-# Sales Agent Example
-sales_agent = Agent(
-    name="Sales Agent",
-    instructions="Handle sales inquiries. Offer products and manage orders.",
-    functions=[offer_discount],  # Your sales-specific tools
-    triage_assignment="Triage Agent"  # Must match triage agent's name
-)
-
-# Document Assistant Example
-docs_agent = Agent(
-    name="Document Assistant",
-    instructions="Search and provide information from our document base.",
-    functions=[search_documents],
-    triage_assignment="Triage Agent"
-)
-```
-
-#### How Triage Works
-
-1. **Discovery**: The triage agent automatically discovers agents assigned to it via `triage_assignment`
-2. **Transfer Functions**: Creates transfer functions for each discovered agent
-3. **Routing**: Analyzes requests and routes to appropriate specialized agents
-4. **Context**: Maintains conversation context across transfers
-
-#### Triage Flow Example
-
-```python
-# 1. User sends message to triage agent
-response = client.run(
-    agent=triage_agent,
-    messages=[{"role": "user", "content": "I want to buy something"}]
-)
-
-# 2. Triage agent analyzes and transfers to sales agent if appropriate
-# 3. Sales agent handles request with its specialized tools
-# 4. Sales agent can transfer back when done
-```
-
-### Handoffs
-
-An `Agent` can hand off to another `Agent` by returning it in a `function`.
-
-```python
-sales_agent = Agent(name="Sales Agent")
-
-def transfer_to_sales():
-   return sales_agent
-
-agent = Agent(functions=[transfer_to_sales])
-
-response = client.run(agent, [{"role":"user", "content":"Transfer me to sales."}])
-print(response.agent.name)
-```
-
-```
-Sales Agent
-```
-
-### Passing Context with Triage Agents
-
-When an agent **hands off** to another agent (by returning an `Agent` in a function call or using triage-based `transfer`), the conversation's **`context_variables`** also get passed along. If your agent function returns a `Result` with `context_variables`, those updates are merged into the context before the next agent takes control.
-
-**Example**:
-```python
-def transfer_with_context():
-    """
-    Transfer to Sales Agent, but also store user preference in context.
-    """
-    return Result(
-        value="Switching you to Sales.",
-        agent=sales_agent,
-        context_variables={"preferred_color": "blue"}
-    )
-```
-
-## Advanced Techniques
-
-### Timed or Event-Triggered Agents
-
-Tangent itself is stateless between calls, but you can build scheduling or triggers around it:
-
-- **External Cron/Timer**: At a scheduled time, run a function that calls `client.run(...)` with a specific agent (e.g., a "Reminder Agent").
-- **Event-Driven**: If an external event or database insert triggers something, you can programmatically call `client.run(...)` with that agent.
-
-**Example** (pseudo-code):
-
-```python
-import time
-
-while True:
-    time.sleep(60)  # check every minute
-    if check_database_for_updates():
-        messages = [{"role": "user", "content": "New data arrived in DB, handle it."}]
-        response = client.run(agent=db_agent, messages=messages)
-        ...
-```
-
-### Connecting Agents to a Database
-
-Agents can call **tools** (Python functions) that interact with any database. For instance:
-
-```python
-def store_in_db(data: dict):
-    """
-    Insert data into our MySQL database.
-    """
-    # your DB logic here...
-    return "Data stored!"
-```
-
-Attach to an agent:
-
-```python
-db_agent = Agent(
-    name="Database Agent",
-    instructions="You can store data in our DB using store_in_db().",
-    functions=[store_in_db]
-)
-```
-
-### Agent Activation on Specific Conditions
-
-If you want an agent to be "activated" only when certain conditions are met, you have several options:
-
-1. **Triage Logic**: The triage agent can call a specialized agent only if the user's request matches certain instructions.
-2. **Model Logic**: The model can interpret requests and call the appropriate function or transfer function automatically.
-3. **Manual Logic**: You can filter user requests yourself in Python and decide to call `client.run(..., agent=some_agent)` only if certain text or conditions match.
-
-For instance, you might parse user input for keywords like "urgent" or "report," then decide to run a specialized "Alert Agent."
-## Examples
-
-Check out `/examples` for inspiration! Learn more about each one in its README.
-
-- [`triage_agent`](examples/triage_agent): Example of automatic agent discovery and routing using the triage agent. Passing users to the 'websearch_agent'or 'embedding_agent' based on their request.
-- [`websearch_agent`](examples/websearch_agent): Example of an agent that can search the web and summarize results
-- [`embedding_agent`](examples/embedding_agent): Example of using embeddings for semantic search and document retrieval
-
-## Evaluations
-
-Evaluations are crucial to any project, and we encourage developers to bring their own eval suites to test the performance of their tangents. For reference, we have some examples for how to eval tangent in the `airline`, `weather_agent` and `triage_agent` quickstart examples. See the READMEs for more details.
-
-### Testing and Evaluation
-
-Create test cases in `evals.py`:
-
-```python
-import pytest
-from tangent import tangent
-
-def test_sales_routing():
-    client = tangent()
-    response = client.run(
-        agent=triage_agent,
-        messages=[{"role": "user", "content": "I want to buy shoes"}]
-    )
-    assert response.agent.name == "Sales Agent"
-
-def test_document_routing():
-    client = tangent()
-    response = client.run(
-        agent=triage_agent,
-        messages=[{"role": "user", "content": "What's in our documentation?"}]
-    )
-    assert response.agent.name == "Document Assistant"
-```
-
-Run tests with:
-```bash
-pytest evals.py
-```
-
-## Utils
-
-Use the `run_tangent_loop` to test out your tangent! This will run a REPL on your command line. Supports streaming.
-
-```python
-from tangent.repl import run_tangent_loop
-...
-run_tangent_loop(agent, stream=True)
-```
-
-## FAQ / Troubleshooting
-
-1. **How do I preserve multi-turn context across multiple calls?**  
-   - Ensure you keep appending the returned messages (from `response.messages`) to your local `messages` list. Then pass that updated `messages` list to the next `client.run(...)`.  
-
-2. **How do I pass context from one agent to another automatically?**  
-   - If an agent calls `return Result(agent=other_agent, context_variables={"foo": "bar"})`, the conversation automatically switches to `other_agent` and merges `{"foo": "bar"}` into `context_variables`.
-
-3. **Can I connect multiple agents to an external database?**  
-   - Yes. Each agent can have one or more functions that interface with your database. The model can call them automatically via function calling.
-
-### Troubleshooting
-
-1. **Agent Discovery Issues**
-   - Verify `triage_assignment` matches triage agent name exactly
-   - Ensure `auto_discover=True` is set
-   - Check agent imports are in scope for `sys.modules`
-
-2. **Tool Execution Errors**
-   - Verify function names match exactly
-   - Check function signatures and docstrings
-   - Ensure all required parameters are provided
-
-3. **Model Configuration**
-   - Use `"gpt-4o"` (default) for best results
-   - GPT-4 is deprecated in this codebase
+## Imports *(all are 'from tangent import ...')*
+
+### [E] Core Components - *created in [B] core.py*:
+   - `tangent`: The main class for handling AI agent interactions
+      ```python
+      from tangent import tangent
+      ```
+   - `Agent`: Base class for creating AI agents
+      ```python
+      from tangent import Agent
+      ```
+   - `Response`: Class for encapsulating agent responses
+      ```python
+      from tangent import Response
+      ```
+   - `Result`: Class for encapsulating function return values
+      ```python
+      from tangent import Result
+      ```
+
+### [E] Embedding Components - *created in [D] embeddings.py*:
+   - `DocumentStore`: High-level interface for document management and search
+      ```python
+      from tangent import DocumentStore
+      ```
+
+### [F] REPL Components - *created in [G] repl/repl.py*:
+   - `run_tangent_loop`: Function to run an interactive agent session
+      ```python
+      from tangent import run_tangent_loop
+      ```
+   - `process_and_print_streaming_response`: Function to handle streaming responses
+      ```python
+      from tangent import process_and_print_streaming_response
+      ```
+
+### [H] Tools Components - *created in [I] tools/knowledge_base.py*:
+   - `search_knowledge_base`: Function to search through an agent's knowledge base
+      ```python
+      from tangent import search_knowledge_base
+      ```
+
+### [J] Triage Components - *created in [K] triage/agent.py and [L] triage/utils.py*:
+   - `create_triage_agent`: Function to create a triage agent
+      ```python
+      from tangent import create_triage_agent
+      ```
+
+## [A] tangent.types
+
+### Core Agent Types - *created in [B] core.py*
+
+1. `Agent`
+   - **Type**: Pydantic BaseModel
+   - **Purpose**: Represents an AI agent with specific capabilities
+   - **Fields**:
+     - `name: str` - Agent name (default: "Agent")
+     - `model: str` - Model identifier (default: "gpt-4o")
+     - `instructions: Union[str, Callable[[], str]]` - Agent instructions
+     - `functions: List[AgentFunction]` - Available functions (default: [])
+     - `tool_choice: str` - Tool selection preference (default: None)
+     - `parallel_tool_calls: bool` - Enable parallel tool calls (default: True)
+     - `triage_assignment: Optional[str]` - Triage agent assignment (optional)
+     - `embedding_config: Optional[str]` - Embedding configuration (optional)
+     - `embedding_manager: Optional[str]` - Embedding manager (optional)
+
+2. `Response`
+   - **Type**: Pydantic BaseModel
+   - **Purpose**: Encapsulates agent response data
+   - **Fields**:
+     - `messages: List` - Response messages (default: [])
+     - `agent: Optional[Agent]` - Associated agent (optional)
+     - `context_variables: dict` - Context variables (default: {})
+
+3. `Result`
+
+    - **Type**: Pydantic BaseModel
+    - **Purpose**: Encapsulates function return values
+    - **Fields**:
+      - `value: str` - Result value (default: "")
+      - `agent: Optional[Agent]` - Associated agent (optional)
+      - `context_variables: dict` - Context variables (default: {})
+
+### Document Types - *created in [D] embeddings.py*
+
+1. `DocumentChunk`
+   - **Type**: dataclass
+   - **Purpose**: Represents a chunk of text from a document with its metadata
+   - **Fields**:
+     - `text: str` - The actual text content
+     - `metadata: dict` - Associated metadata
+     - `source_file: str` - Source file path
+     - `chunk_index: int` - Index of the chunk (default: 0)
+
+2. `Document`
+   - **Type**: Pydantic BaseModel
+   - **Purpose**: Represents a complete document with text and metadata
+   - **Fields**:
+     - `id: str` - Document identifier
+     - `text: str` - Document content
+     - `metadata: dict` - Associated metadata (default: {})
+     - `embedding: Optional[List[float]]` - Vector embedding (optional)
+
+### Embedding Configuration - *created in [D] embeddings.py*
+
+7. `EmbeddingConfig`
+   - **Type**: Pydantic BaseModel
+   - **Purpose**: Configuration for embedding functionality
+   - **Fields**:
+     - `model: str` - Embedding model name (default: "text-embedding-3-large")
+     - `chunk_size: int` - Size of text chunks (default: 500)
+     - `chunk_overlap: int` - Overlap between chunks (default: 50)
+     - `batch_size: int` - Batch size for processing (default: 100)
+     - `vector_db: Union[QdrantConfig, PineconeConfig, CustomVectorDBConfig]` - Vector database configuration
+     - `supported_extensions: List[str]` - Supported file extensions
+     - `recreate_collection: bool` - Whether to recreate collection (default: False)
+
+### Vector Database Configuration Types - *created in [D] embeddings.py*
+
+3. `VectorDBConfig`
+   - **Type**: Pydantic BaseModel
+   - **Purpose**: Base configuration for vector databases
+   - **Fields**:
+     - `type: Literal["qdrant", "pinecone", "custom"]` - Database type (default: "qdrant")
+     - `collection_name: str` - Name of collection (default: "default")
+
+4. `QdrantConfig`
+   - **Type**: VectorDBConfig
+   - **Purpose**: Qdrant-specific configuration
+   - **Fields**:
+     - `type: Literal["qdrant"]` - Fixed as "qdrant"
+     - `url: str` - Server URL (default: "localhost")
+     - `port: int` - Server port (default: 6333)
+     - `api_key: Optional[str]` - API key if required
+
+5. `PineconeConfig`
+   - **Type**: VectorDBConfig
+   - **Purpose**: Pinecone-specific configuration
+   - **Fields**:
+     - `type: Literal["pinecone"]` - Fixed as "pinecone"
+     - `api_key: str` - Pinecone API key
+     - `environment: str` - Pinecone environment
+     - `index_name: str` - Name of the Pinecone index
+
+6. `CustomVectorDBConfig`
+   - **Type**: VectorDBConfig
+   - **Purpose**: Configuration for custom vector database implementations
+   - **Fields**:
+     - `type: Literal["custom"]` - Fixed as "custom"
+     - `connection_params: dict` - Custom connection parameters (default: {})
+
+### Type Aliases
+
+- `AgentFunction = Callable[..., Union[str, 'Agent', dict, 'Result']]` - Type alias for agent functions
+- `EmbeddingManager = ForwardRef('EmbeddingManager')` - Forward reference for EmbeddingManager
+
+## Triage Components
+
+### How triage agent works:
+1. Create a triage agent using `create_triage_agent`
+2. System discovers or is given managed agents
+3. Transfer functions are created for each managed agent
+4. When running:
+   - Triage agent analyzes requests
+   - Can transfer to specialized agents
+   - Specialized agents can transfer back
+
+### [K] Triage Agent
+This is the core triage functionality with several key functions:
+
+- `create_transfer_functions(managed_agents, triage_agent)`:
+  - Creates functions that allow transferring between agents
+  - Makes a transfer function for each managed agent
+  - Adds "transfer back" functions to managed agents
+
+- `discover_assigned_agents(triage_agent_name)`:
+  - Finds all agents assigned to a specific triage agent
+  - Searches through all loaded Python modules
+  - Looks for agents with matching `triage_assignment`
+
+- `enhance_instructions(base_instructions, managed_agents)`:
+  - Enhances the triage agent's instructions
+  - Adds information about available specialized agents
+  - Includes guidance on when to transfer
+
+- `create_triage_agent(...)`:
+  - Main function to create a triage agent
+  - Can auto-discover assigned agents
+  - Sets up transfer functions
+  - Configures enhanced instructions
+
+### [L] Triage Utils
+This is a utility file with three main functions for managing triage agents:
+
+- `discover_agents(module)`:
+  - Scans a Python module to find all Agent instances
+  - Returns a dictionary of agent names to Agent objects
+  - Used for automatic agent discovery
+
+- `validate_agent_compatibility(agent)`:
+  - Checks if an agent can work with the triage system
+  - Verifies the agent has required attributes (name, instructions, functions)
+  - Returns True/False for compatibility
+
+- `generate_agent_description(agent)`:
+  - Creates a human-readable description of an agent
+  - Includes the agent's name, instructions, and capabilities
+  - Extracts docstrings from the agent's functions for capability descriptions
