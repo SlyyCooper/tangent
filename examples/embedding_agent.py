@@ -64,7 +64,7 @@ Remember:
 )
 
 if __name__ == "__main__":
-    from tangent.repl import run_tangent_loop
+    from tangent import run_tangent_loop
     
     print(f"\nHello! I'm your knowledgeable assistant. I've read {doc_store.get_document_count()} documents about deep learning, robotics, and quantum computing.")
     print("What would you like to know about these topics?\n")
