@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["tangent"]
+packages = ["tangent", "tangent.repl", "tangent.tools", "tangent.triage", "tangent.providers"]
 
 [tool.autopep8]
 max_line_length = 120
