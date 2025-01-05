@@ -1,5 +1,8 @@
 import inspect
 from datetime import datetime
+import os
+from pathlib import Path
+from typing import Optional
 
 
 def debug_print(debug: bool, *args: str) -> None:
@@ -85,3 +88,66 @@ def function_to_json(func) -> dict:
             },
         },
     }
+
+
+def load_instructions_from_file(agent_name: str, instructions_dir: str = "instructions") -> Optional[str]:
+    """
+    Load instructions from a file in the specified directory.
+    Looks for files with the agent's name and either .md or .txt extension.
+    
+    Args:
+        agent_name: Name of the agent (used as filename)
+        instructions_dir: Directory to look for instruction files
+        
+    Returns:
+        The contents of the instruction file if found, None otherwise
+    """
+    # Create Path object for the directory
+    dir_path = Path(instructions_dir)
+    
+    # Check both .md and .txt files
+    for ext in [".md", ".txt"]:
+        file_path = dir_path / f"{agent_name}{ext}"
+        if file_path.exists():
+            return file_path.read_text().strip()
+    
+    return None
+
+
+def get_instructions(agent) -> str:
+    """
+    Get instructions for an agent based on its configuration.
+    Handles inline strings, callables, and file-based instructions.
+    
+    Args:
+        agent: The Agent instance
+        
+    Returns:
+        The resolved instructions as a string
+        
+    Raises:
+        ValueError: If instructions cannot be loaded
+    """
+    # Handle inline string
+    if agent.instructions_source == "inline":
+        if isinstance(agent.instructions, str):
+            return agent.instructions
+        raise ValueError(f"Invalid inline instructions for agent {agent.name}")
+    
+    # Handle callable
+    if agent.instructions_source == "callable":
+        if callable(agent.instructions):
+            return agent.instructions()
+        raise ValueError(f"Invalid callable instructions for agent {agent.name}")
+    
+    # Handle file-based
+    if agent.instructions_source == "file":
+        instructions = load_instructions_from_file(agent.name, agent.instructions_dir)
+        if instructions is not None:
+            return instructions
+        raise ValueError(
+            f"Could not find instructions file for agent {agent.name} "
+            f"in directory {agent.instructions_dir}"
+        )
+    
+    raise ValueError(f"Unknown instructions source: {agent.instructions_source}")

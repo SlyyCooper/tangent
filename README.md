@@ -9,6 +9,7 @@ A modern, lightweight framework for building AI agents with seamless model switc
 ## Features
 
 - 🔄 **Unified Model Interface**: Switch between OpenAI and Anthropic models by just changing the model name
+- 🛠 **Flexible Instructions**: Support for inline, callable, and file-based instructions
 - 🛠️ **Rich Helper Functions**: Streamlined setup and interaction with AI agents
 - 🔧 **Function Calling**: Seamless tool integration across both providers
 - 📚 **Document Management**: Built-in vector storage and semantic search
@@ -62,6 +63,43 @@ while True:
 Just change the model name and everything works automatically!
 
 ## Advanced Usage
+
+### Instruction Sources
+
+Tangent supports three ways to provide agent instructions:
+
+```python
+from tangent import setup_agent, InstructionsSource
+
+# 1. Inline Instructions (default)
+client, agent = setup_agent(
+    name="InlineBot",
+    model="gpt-4o",
+    instructions="You are a helpful assistant."
+)
+
+# 2. Callable Instructions (dynamic)
+def get_dynamic_instructions(context_variables=None):
+    """Dynamic instructions based on time of day."""
+    from datetime import datetime
+    hour = datetime.now().hour
+    return "You are a morning assistant!" if hour < 12 else "You are an evening assistant!"
+
+client, agent = setup_agent(
+    name="DynamicBot",
+    model="gpt-4o",
+    instructions=get_dynamic_instructions
+)
+agent.instructions_source = InstructionsSource.CALLABLE
+
+# 3. File Instructions (from instructions directory)
+client, agent = setup_agent(
+    name="FileBot",
+    model="gpt-4o",
+    instructions="from_file"  # Will load from instructions/FileBot.md
+)
+agent.instructions_source = InstructionsSource.FILE
+```
 
 ### Function-Enabled Agent
 
@@ -150,6 +188,7 @@ while True:
 ### Agents
 - Represent AI assistants with specific capabilities
 - Support both OpenAI and Anthropic models
+- Support multiple instruction sources (inline, callable, file-based)
 - Can be equipped with functions and tools
 
 ### Functions

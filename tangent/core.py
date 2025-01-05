@@ -9,7 +9,7 @@ from openai import OpenAI
 
 
 # Local imports
-from .util import function_to_json, debug_print, merge_chunk
+from .util import function_to_json, debug_print, merge_chunk, get_instructions
 from .types import (
     Agent,
     AgentFunction,
@@ -18,6 +18,7 @@ from .types import (
     Function,
     Response,
     Result,
+    InstructionsSource,
 )
 
 __CTX_VARS_NAME__ = "context_variables"
@@ -290,3 +291,21 @@ class tangent:
             agent=active_agent,
             context_variables=context_variables,
         )
+
+    def _prepare_messages(self, agent: Agent, messages: list, context_variables: dict = None) -> list:
+        """Prepare messages for the API call."""
+        # Get the agent's instructions
+        instructions = get_instructions(agent)
+        
+        # Create the system message
+        system_message = {
+            "role": "system",
+            "content": instructions
+        }
+        
+        # Add context variables if provided
+        if context_variables:
+            system_message["context_variables"] = context_variables
+        
+        # Return full message list with system message first
+        return [system_message] + messages
