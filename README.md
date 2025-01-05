@@ -1,28 +1,21 @@
-<div align="center">
-  <h1>🦊 TANGENT</h1>
-</div>
+# 🦊 TANGENT
 
 <div align="center">
   <img src="public/tangent.webp" alt="Tangent" width="600"/>
 </div>
 
-*Inspired by [OpenAI's Swarm](https://github.com/openai/swarm)*
+A modern, lightweight framework for building AI agents with seamless model switching between OpenAI and Anthropic. Created by [SlyyCooper](https://github.com/SlyyCooper).
 
-> A lightweight, ergonomic framework for building and orchestrating multi-agent systems. Created by [SlyyCooper](https://github.com/SlyyCooper).
+## Features
 
-**Tangent** focuses on making agent **coordination** and **execution** lightweight, highly controllable, and easily testable.
+- 🔄 **Unified Model Interface**: Switch between OpenAI and Anthropic models by just changing the model name
+- 🛠️ **Rich Helper Functions**: Streamlined setup and interaction with AI agents
+- 🔧 **Function Calling**: Seamless tool integration across both providers
+- 📚 **Document Management**: Built-in vector storage and semantic search
+- 🔀 **Triage System**: Automatic request routing between specialized agents
+- 🌊 **Real-time Streaming**: Async streaming support for responsive interactions
 
-It accomplishes this through three primitive abstractions:
-1. **Agents** (encompassing instructions and tools)
-2. **Handoffs** (allowing agents to transfer control)
-3. **Tools** (encompassing functions and tools)
-4. **Embedding** (encompassing document management and search)
-5. **Triage** (automatic orchestration and routing)
-
-These primitives are powerful enough to express rich dynamics between tools and networks of agents, allowing you to build scalable, real-world solutions while avoiding a steep learning curve.
-
-
-## Install
+## Installation
 
 Requires Python 3.10+
 
@@ -34,250 +27,156 @@ pip install git+ssh://git@github.com/SlyyCooper/tangent.git
 pip install git+https://github.com/SlyyCooper/tangent.git
 ```
 
-# Quick Start
+## Quick Start
 
-## Create a new agent
 ```python
-from tangent import tangent, Agent, run_tangent_loop
+from tangent import setup_agent, get_user_input, show_ai_response, process_chat
 
-client = tangent()
-
-agent = Agent(
-    name="Basic Agent",
-    model="gpt-4o",
-    instructions="You are a simple chatbot that can respond to user requests."
+# Quick setup - works with both OpenAI and Anthropic
+client, agent = setup_agent(
+    name="ChatBot",
+    model="gpt-4o",  # or "claude-3-5-sonnet-20241022"
+    instructions="You are a helpful assistant."
 )
 
-run_tangent_loop(agent, stream=True, debug=False)
+# Simple chat loop with streaming
+while True:
+    # Get user input
+    message = get_user_input("You: ")
+    
+    # Process the chat (streams by default)
+    response = process_chat(client, agent, message)
+    
+    # Show the response
+    show_ai_response(response, agent.name)
 ```
 
-# tangent Python package - Detailed Overview
+## Model Support
 
-## package file structure
+### OpenAI Models
+- `"gpt-4o"` - Latest GPT-4 model
+
+### Anthropic Models
+- `"claude-3-5-sonnet-20241022"` - Latest Claude 3 Sonnet model
+
+Just change the model name and everything works automatically!
+
+## Advanced Usage
+
+### Function-Enabled Agent
+
+```python
+from tangent import setup_agent, get_user_input, show_ai_response, process_chat
+
+def search_web(query: str) -> str:
+    """Search the web for information."""
+    return f"Results for: {query}"
+
+# Setup with functions
+client, agent = setup_agent(
+    name="ToolBot",
+    model="gpt-4o",
+    instructions="You are a helpful assistant that can search the web."
+)
+agent.functions = [search_web]
+
+# Interactive loop
+while True:
+    question = get_user_input("Search: ")
+    response = process_chat(client, agent, question)
+    show_ai_response(response, agent.name)
 ```
- tangent/
-[A] ├── types.py 
-[B] ├── core.py
-[C] ├── util.py
-[D] ├── embeddings.py
-[E] ├── __init__.py 
-    ├── repl/
-[F] │   ├── __init__.py
-[G] │   └── repl.py
-    ├── tools/
-[H] │   ├── __init__.py
-[I] │   └── knowledge_base.py
-    ├── triage/
-[J] │   ├── __init__.py
-[K] │   ├── agent.py
-[L] │   └── utils.py
+
+### Knowledge Base Agent
+
+```python
+from tangent import setup_agent, get_user_input, show_ai_response, process_chat, DocumentStore
+
+# Set up document store
+docs = DocumentStore("my_documents")
+
+# Setup with knowledge base
+client, agent = setup_agent(
+    name="KnowledgeBot",
+    model="gpt-4o",
+    instructions="You help answer questions using the knowledge base."
+)
+agent.embedding_manager = docs.manager
+
+# Interactive loop
+while True:
+    question = get_user_input("Ask KB: ")
+    response = process_chat(client, agent, question)
+    show_ai_response(response, agent.name)
 ```
 
-## Imports *(all are 'from tangent import ...')*
+### Triage System
 
-### [E] Core Components - *created in [B] core.py*:
-   - `tangent`: The main class for handling AI agent interactions
-      ```python
-      from tangent import tangent
-      ```
-   - `Agent`: Base class for creating AI agents
-      ```python
-      from tangent import Agent
-      ```
-   - `Response`: Class for encapsulating agent responses
-      ```python
-      from tangent import Response
-      ```
-   - `Result`: Class for encapsulating function return values
-      ```python
-      from tangent import Result
-      ```
+```python
+from tangent import setup_agent, create_triage_agent, process_chat
 
-### [E] Embedding Components - *created in [D] embeddings.py*:
-   - `DocumentStore`: High-level interface for document management and search
-      ```python
-      from tangent import DocumentStore
-      ```
+# Create specialized agents
+search_agent = Agent(
+    name="SearchBot",
+    model="gpt-4o",
+    instructions="You handle web searches.",
+    triage_assignment="search"
+)
 
-### [F] REPL Components - *created in [G] repl/repl.py*:
-   - `run_tangent_loop`: Function to run an interactive agent session
-      ```python
-      from tangent import run_tangent_loop
-      ```
-   - `process_and_print_streaming_response`: Function to handle streaming responses
-      ```python
-      from tangent import process_and_print_streaming_response
-      ```
+kb_agent = Agent(
+    name="KnowledgeBot",
+    model="gpt-4o",
+    instructions="You handle knowledge base queries.",
+    triage_assignment="knowledge"
+)
 
-### [H] Tools Components - *created in [I] tools/knowledge_base.py*:
-   - `search_knowledge_base`: Function to search through an agent's knowledge base
-      ```python
-      from tangent import search_knowledge_base
-      ```
+# Create triage agent
+triage_agent = create_triage_agent(
+    name="Router",
+    model="gpt-4o",
+    instructions="Route requests to appropriate agents.",
+    managed_agents=[search_agent, kb_agent]
+)
 
-### [J] Triage Components - *created in [K] triage/agent.py and [L] triage/utils.py*:
-   - `create_triage_agent`: Function to create a triage agent
-      ```python
-      from tangent import create_triage_agent
-      ```
+# Use like any other agent
+while True:
+    question = get_user_input("Ask: ")
+    response = process_chat(client, triage_agent, question)
+    show_ai_response(response, triage_agent.name)
+```
 
-## [A] tangent.types
+## Core Components
 
-### Core Agent Types - *created in [B] core.py*
+### Agents
+- Represent AI assistants with specific capabilities
+- Support both OpenAI and Anthropic models
+- Can be equipped with functions and tools
 
-1. `Agent`
-   - **Type**: Pydantic BaseModel
-   - **Purpose**: Represents an AI agent with specific capabilities
-   - **Fields**:
-     - `name: str` - Agent name (default: "Agent")
-     - `model: str` - Model identifier (default: "gpt-4o")
-     - `instructions: Union[str, Callable[[], str]]` - Agent instructions
-     - `functions: List[AgentFunction]` - Available functions (default: [])
-     - `tool_choice: str` - Tool selection preference (default: None)
-     - `parallel_tool_calls: bool` - Enable parallel tool calls (default: True)
-     - `triage_assignment: Optional[str]` - Triage agent assignment (optional)
-     - `embedding_config: Optional[str]` - Embedding configuration (optional)
-     - `embedding_manager: Optional[str]` - Embedding manager (optional)
+### Functions
+- Add custom capabilities to agents
+- Automatically handled across different models
+- Support for parallel execution
 
-2. `Response`
-   - **Type**: Pydantic BaseModel
-   - **Purpose**: Encapsulates agent response data
-   - **Fields**:
-     - `messages: List` - Response messages (default: [])
-     - `agent: Optional[Agent]` - Associated agent (optional)
-     - `context_variables: dict` - Context variables (default: {})
+### Document Management
+- Built-in vector storage support
+- Semantic search capabilities
+- Support for multiple vector databases:
+  - Qdrant (default)
+  - Pinecone
+  - Custom implementations
 
-3. `Result`
+### Triage System
+- Automatic request routing
+- Dynamic agent discovery
+- Seamless transfers between agents
 
-    - **Type**: Pydantic BaseModel
-    - **Purpose**: Encapsulates function return values
-    - **Fields**:
-      - `value: str` - Result value (default: "")
-      - `agent: Optional[Agent]` - Associated agent (optional)
-      - `context_variables: dict` - Context variables (default: {})
+## Helper Functions
 
-### Document Types - *created in [D] embeddings.py*
+- `setup_agent()`: Quick agent initialization
+- `get_user_input()`: Standardized input handling
+- `show_ai_response()`: Universal response display
+- `process_chat()`: Streamlined message processing
 
-1. `DocumentChunk`
-   - **Type**: dataclass
-   - **Purpose**: Represents a chunk of text from a document with its metadata
-   - **Fields**:
-     - `text: str` - The actual text content
-     - `metadata: dict` - Associated metadata
-     - `source_file: str` - Source file path
-     - `chunk_index: int` - Index of the chunk (default: 0)
+## Contributing
 
-2. `Document`
-   - **Type**: Pydantic BaseModel
-   - **Purpose**: Represents a complete document with text and metadata
-   - **Fields**:
-     - `id: str` - Document identifier
-     - `text: str` - Document content
-     - `metadata: dict` - Associated metadata (default: {})
-     - `embedding: Optional[List[float]]` - Vector embedding (optional)
-
-### Embedding Configuration - *created in [D] embeddings.py*
-
-7. `EmbeddingConfig`
-   - **Type**: Pydantic BaseModel
-   - **Purpose**: Configuration for embedding functionality
-   - **Fields**:
-     - `model: str` - Embedding model name (default: "text-embedding-3-large")
-     - `chunk_size: int` - Size of text chunks (default: 500)
-     - `chunk_overlap: int` - Overlap between chunks (default: 50)
-     - `batch_size: int` - Batch size for processing (default: 100)
-     - `vector_db: Union[QdrantConfig, PineconeConfig, CustomVectorDBConfig]` - Vector database configuration
-     - `supported_extensions: List[str]` - Supported file extensions
-     - `recreate_collection: bool` - Whether to recreate collection (default: False)
-
-### Vector Database Configuration Types - *created in [D] embeddings.py*
-
-3. `VectorDBConfig`
-   - **Type**: Pydantic BaseModel
-   - **Purpose**: Base configuration for vector databases
-   - **Fields**:
-     - `type: Literal["qdrant", "pinecone", "custom"]` - Database type (default: "qdrant")
-     - `collection_name: str` - Name of collection (default: "default")
-
-4. `QdrantConfig`
-   - **Type**: VectorDBConfig
-   - **Purpose**: Qdrant-specific configuration
-   - **Fields**:
-     - `type: Literal["qdrant"]` - Fixed as "qdrant"
-     - `url: str` - Server URL (default: "localhost")
-     - `port: int` - Server port (default: 6333)
-     - `api_key: Optional[str]` - API key if required
-
-5. `PineconeConfig`
-   - **Type**: VectorDBConfig
-   - **Purpose**: Pinecone-specific configuration
-   - **Fields**:
-     - `type: Literal["pinecone"]` - Fixed as "pinecone"
-     - `api_key: str` - Pinecone API key
-     - `environment: str` - Pinecone environment
-     - `index_name: str` - Name of the Pinecone index
-
-6. `CustomVectorDBConfig`
-   - **Type**: VectorDBConfig
-   - **Purpose**: Configuration for custom vector database implementations
-   - **Fields**:
-     - `type: Literal["custom"]` - Fixed as "custom"
-     - `connection_params: dict` - Custom connection parameters (default: {})
-
-### Type Aliases
-
-- `AgentFunction = Callable[..., Union[str, 'Agent', dict, 'Result']]` - Type alias for agent functions
-- `EmbeddingManager = ForwardRef('EmbeddingManager')` - Forward reference for EmbeddingManager
-
-## Triage Components
-
-### How triage agent works:
-1. Create a triage agent using `create_triage_agent`
-2. System discovers or is given managed agents
-3. Transfer functions are created for each managed agent
-4. When running:
-   - Triage agent analyzes requests
-   - Can transfer to specialized agents
-   - Specialized agents can transfer back
-
-### [K] Triage Agent
-This is the core triage functionality with several key functions:
-
-- `create_transfer_functions(managed_agents, triage_agent)`:
-  - Creates functions that allow transferring between agents
-  - Makes a transfer function for each managed agent
-  - Adds "transfer back" functions to managed agents
-
-- `discover_assigned_agents(triage_agent_name)`:
-  - Finds all agents assigned to a specific triage agent
-  - Searches through all loaded Python modules
-  - Looks for agents with matching `triage_assignment`
-
-- `enhance_instructions(base_instructions, managed_agents)`:
-  - Enhances the triage agent's instructions
-  - Adds information about available specialized agents
-  - Includes guidance on when to transfer
-
-- `create_triage_agent(...)`:
-  - Main function to create a triage agent
-  - Can auto-discover assigned agents
-  - Sets up transfer functions
-  - Configures enhanced instructions
-
-### [L] Triage Utils
-This is a utility file with three main functions for managing triage agents:
-
-- `discover_agents(module)`:
-  - Scans a Python module to find all Agent instances
-  - Returns a dictionary of agent names to Agent objects
-  - Used for automatic agent discovery
-
-- `validate_agent_compatibility(agent)`:
-  - Checks if an agent can work with the triage system
-  - Verifies the agent has required attributes (name, instructions, functions)
-  - Returns True/False for compatibility
-
-- `generate_agent_description(agent)`:
-  - Creates a human-readable description of an agent
-  - Includes the agent's name, instructions, and capabilities
-  - Extracts docstrings from the agent's functions for capability descriptions
+Contributions are welcome! Please feel free to submit a Pull Request.

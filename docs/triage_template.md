@@ -95,7 +95,7 @@ agent_2 = Agent(
 
 ```python
 # main.py
-from tangent.repl import run_tangent_loop
+from tangent.repl import run_chat_loop
 from config.agents import triage_agent
 
 # Optional: Add context that all agents can access
@@ -105,7 +105,7 @@ context = {
 }
 
 if __name__ == "__main__":
-    run_tangent_loop(triage_agent, context_variables=context)
+    run_chat_loop(triage_agent, context_variables=context)
 ```
 
 ## Flow Explanation

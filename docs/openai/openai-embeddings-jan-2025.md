@@ -1,3 +1,5 @@
+# openai-embeddings-jan-2025.md
+
 Vector embeddings
 =================
 

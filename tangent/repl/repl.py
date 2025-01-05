@@ -57,7 +57,7 @@ def pretty_print_messages(messages) -> None:
             print(f"\033[95m{name}\033[0m({arg_str[1:-1]})")
 
 
-def run_tangent_loop(
+def run_chat_loop(
     starting_agent, context_variables=None, stream=False, debug=False
 ) -> None:
     client = tangent()

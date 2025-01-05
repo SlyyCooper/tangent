@@ -162,7 +162,7 @@ print(response.choices[0].message.content)
 While the GPT-4o doesn't take videos as input directly, we can use vision and the 128K context window to describe the static frames of a whole video at once.
 
 ```python
-from tangent import tangent, Agent, run_tangent_loop
+from tangent import setup_agent, run_chat_loop
 import cv2
 import base64
 import time
@@ -207,5 +207,5 @@ class VideoAgent(Agent):
 # Usage
 client = tangent()
 agent = VideoAgent("data/bison.mp4")
-run_tangent_loop(agent, stream=True, debug=False)
+run_chat_loop(agent, stream=True, debug=False)
 ```

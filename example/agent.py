@@ -66,10 +66,10 @@ main_agent = Agent(
 )
 
 if __name__ == "__main__":
-    from tangent.repl import run_tangent_loop
+    from tangent.repl import run_chat_loop
     import datetime
     
     print(f"\nYo what up Trevor! How's it going on this awesome {current_day}? 🤙\n")
     
     # Run the interactive demo loop
-    run_tangent_loop(main_agent, stream=True, debug=False)
+    run_chat_loop(main_agent, stream=True, debug=False)
