@@ -1,11 +1,10 @@
-from tangent import Agent, tangent, Result, DocumentStore
+from tangent import Result, DocumentStore
 from tangent.types import EmbeddingConfig, QdrantConfig
-from typing import List
 import os
 
 # Get the absolute path to test_documents directory
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-docs_path = os.path.join(base_dir, "test_documents", "articles")
+docs_path = os.path.join(base_dir, "my_documents")
 
 # Initialize document store with configuration
 doc_store = DocumentStore(
@@ -14,7 +13,7 @@ doc_store = DocumentStore(
         model="text-embedding-3-large",
         chunk_size=500,
         vector_db=QdrantConfig(
-            collection_name="ai_documents",
+            collection_name="my_documents",
             url="localhost",
             port=6333
         )
@@ -24,6 +23,13 @@ doc_store = DocumentStore(
 def search_documents(query: str, top_k: int = 3) -> Result:
     """
     Search documents using semantic similarity.
+    
+    Args:
+        query: The search query string
+        top_k: Number of top results to return (default: 3)
+        
+    Returns:
+        Result object containing formatted search results and context
     """
     try:
         results = doc_store.search(query, top_k)
@@ -46,28 +52,11 @@ def search_documents(query: str, top_k: int = 3) -> Result:
     except Exception as e:
         return Result(value=f"Error searching documents: {str(e)}")
 
-# Create the document embedding agent
-embedding_agent = Agent(
-    name="Document Assistant",
-    model="gpt-4o",
-    instructions="""You are a knowledgeable assistant who has already read and understood all the documents in the test_documents directory. You have deep knowledge about:
-
-When users ask questions, directly provide relevant information from the documents. Don't mention technical details about processing or embeddings. Just be helpful and informative, as if you've already read and memorized all the documents.
-
-Remember:
-- Be conversational and natural
-- Share specific details from the documents
-- Don't mention searching or processing
-- Respond as if you already know all the content""",
-    functions=[search_documents],
-    triage_assignment="Research Assistant"
-)
-
-if __name__ == "__main__":
-    from tangent import run_tangent_loop
+def get_document_count() -> int:
+    """
+    Get the total number of documents in the document store.
     
-    print(f"\nHello! I'm your knowledgeable assistant. I've read {doc_store.get_document_count()} documents about deep learning, robotics, and quantum computing.")
-    print("What would you like to know about these topics?\n")
-    
-    # Run the interactive demo loop
-    run_tangent_loop(embedding_agent, stream=True, debug=False)
+    Returns:
+        int: Number of documents
+    """
+    return doc_store.get_document_count()
