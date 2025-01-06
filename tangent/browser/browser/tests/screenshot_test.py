@@ -1,25 +1,27 @@
 import base64
 
 import pytest
+import pytest_asyncio
 
-from browser_use.browser.browser import Browser, BrowserConfig
+from tangent.browser.browser.browser import Browser, BrowserConfig
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def browser():
 	browser_service = Browser(config=BrowserConfig(headless=True))
-	yield browser_service
-
+	async with await browser_service.new_context() as context:
+		yield context
 	await browser_service.close()
 
 
-# @pytest.mark.skip(reason='takes too long')
-def test_take_full_page_screenshot(browser):
+@pytest.mark.asyncio
+async def test_take_full_page_screenshot(browser):
 	# Go to a test page
-	browser.go_to_url('https://example.com')
+	page = await browser.get_current_page()
+	await page.goto('https://example.com')
 
 	# Take full page screenshot
-	screenshot_b64 = browser.take_screenshot(full_page=True)
+	screenshot_b64 = await browser.take_screenshot(full_page=True)
 
 	# Verify screenshot is not empty and is valid base64
 	assert screenshot_b64 is not None
@@ -34,4 +36,5 @@ def test_take_full_page_screenshot(browser):
 
 
 if __name__ == '__main__':
-	test_take_full_page_screenshot(Browser(config=BrowserConfig(headless=False)))
+	import asyncio
+	asyncio.run(test_take_full_page_screenshot(Browser(config=BrowserConfig(headless=False))))

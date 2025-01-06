@@ -1,7 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
-
-from langchain_core.messages import HumanMessage, SystemMessage
+from typing import List, Optional, Dict, Union
 
 from browser_use.agent.views import ActionResult, AgentStepInfo
 from browser_use.browser.views import BrowserState
@@ -113,12 +111,12 @@ Notes:
 - _[:] elements provide context but cannot be interacted with
 """
 
-	def get_system_message(self) -> SystemMessage:
+	def get_system_message(self) -> Dict[str, str]:
 		"""
 		Get the system prompt for the agent.
 
 		Returns:
-		    str: Formatted system prompt
+		    dict: System message in standard format
 		"""
 		time_str = self.current_date.strftime('%Y-%m-%d %H:%M')
 
@@ -137,7 +135,11 @@ Functions:
 {self.default_action_description}
 
 Remember: Your responses must be valid JSON matching the specified format. Each action in the sequence must be valid."""
-		return SystemMessage(content=AGENT_PROMPT)
+
+		return {
+			"role": "system",
+			"content": AGENT_PROMPT
+		}
 
 
 # Example:
@@ -161,7 +163,8 @@ class AgentMessagePrompt:
 		self.include_attributes = include_attributes
 		self.step_info = step_info
 
-	def get_user_message(self) -> HumanMessage:
+	def get_user_message(self) -> Dict[str, Union[str, List[Dict]]]:
+		"""Returns the user message in standard format."""
 		if self.step_info:
 			step_info_description = (
 				f'Current step: {self.step_info.step_number + 1}/{self.step_info.max_steps}'
@@ -185,20 +188,25 @@ Interactive elements:
 						f'\nResult of action {i + 1}/{len(self.result)}: {result.extracted_content}'
 					)
 				if result.error:
-					# only use last 300 characters of error
-					error = result.error[-self.max_error_length :]
+					error = result.error[-self.max_error_length:]
 					state_description += f'\nError of action {i + 1}/{len(self.result)}: ...{error}'
 
 		if self.state.screenshot:
-			# Format message for vision model
-			return HumanMessage(
-				content=[
-					{'type': 'text', 'text': state_description},
+			return {
+				"role": "user",
+				"content": [
+					{"type": "text", "text": state_description},
 					{
-						'type': 'image_url',
-						'image_url': {'url': f'data:image/png;base64,{self.state.screenshot}'},
-					},
+						"type": "image_url",
+						"image_url": {
+							"url": f'data:image/png;base64,{self.state.screenshot}',
+							"detail": "high"
+						}
+					}
 				]
-			)
+			}
 
-		return HumanMessage(content=state_description)
+		return {
+			"role": "user",
+			"content": state_description
+		}
