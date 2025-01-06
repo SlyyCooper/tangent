@@ -2,7 +2,11 @@
 import copy
 import json
 from collections import defaultdict
-from typing import List, Callable, Union
+from typing import List, Callable, Union, Optional
+import base64
+import re
+from pathlib import Path
+import cv2
 
 # Package/library imports
 from openai import OpenAI
@@ -19,10 +23,53 @@ from .types import (
     Response,
     Structured_Result,
     InstructionsSource,
+    _ImageContent,
+    _TextContent,
+    MessageContent,
 )
 
 __CTX_VARS_NAME__ = "extracted_data"
 
+def is_url(text: str) -> bool:
+    """Check if text is a URL."""
+    url_pattern = re.compile(
+        r'^https?://'  # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    return url_pattern.match(text) is not None
+
+def is_video(path: str) -> bool:
+    """Check if file is a video."""
+    video_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.webm'}
+    return Path(path).suffix.lower() in video_extensions
+
+def encode_image(image_path: str) -> str:
+    """Convert image file to base64 string."""
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+def extract_video_frames(video_path: str, sample_rate: int = 50) -> List[str]:
+    """Extract frames from video and convert to base64."""
+    video = cv2.VideoCapture(video_path)
+    frames = []
+    frame_count = 0
+    
+    while video.isOpened():
+        success, frame = video.read()
+        if not success:
+            break
+            
+        if frame_count % sample_rate == 0:  # Sample every Nth frame
+            _, buffer = cv2.imencode(".jpg", frame)
+            frames.append(base64.b64encode(buffer).decode("utf-8"))
+        
+        frame_count += 1
+    
+    video.release()
+    return frames
 
 class tangent:
     def __init__(self, client=None):
@@ -45,8 +92,48 @@ class tangent:
             if callable(agent.instructions)
             else agent.instructions
         )
-        messages = [{"role": "system", "content": instructions}] + history
-        debug_print(debug, "Getting chat completion for...:", messages)
+        
+        # Process messages for vision
+        processed_messages = []
+        system_message = {"role": "system", "content": instructions}
+        processed_messages.append(system_message)
+        
+        for msg in history:
+            if agent.vision_enabled and msg["role"] == "user":
+                content = msg["content"]
+                # Handle string content with image
+                if isinstance(content, str) and "image" in msg:
+                    processed_content = [
+                        {"type": "text", "text": content},
+                        self._process_vision_input(msg["image"])
+                    ]
+                # Handle string content with multiple images
+                elif isinstance(content, str) and "images" in msg:
+                    image_contents = []
+                    for img in msg["images"]:
+                        result = self._process_vision_input(img)
+                        if isinstance(result, list):
+                            image_contents.extend(result)
+                        else:
+                            image_contents.append(result)
+                    processed_content = [
+                        {"type": "text", "text": content},
+                        *image_contents
+                    ]
+                # Handle pre-formatted vision content
+                elif isinstance(content, list):
+                    processed_content = content
+                else:
+                    processed_content = content
+                
+                processed_messages.append({
+                    **msg,
+                    "content": processed_content
+                })
+            else:
+                processed_messages.append(msg)
+        
+        debug_print(debug, "Getting chat completion for...:", processed_messages)
 
         tools = [function_to_json(f) for f in agent.functions]
         # hide extracted_data from model
@@ -58,7 +145,7 @@ class tangent:
 
         create_params = {
             "model": model_override or agent.model,
-            "messages": messages,
+            "messages": processed_messages,
             "tools": tools or None,
             "tool_choice": agent.tool_choice,
             "stream": stream,
@@ -76,12 +163,12 @@ class tangent:
 
             case Agent() as agent:
                 return Structured_Result(
-                    value=json.dumps({"assistant": agent.name}),
+                    result_overview=json.dumps({"assistant": agent.name}),
                     agent=agent,
                 )
             case _:
                 try:
-                    return Structured_Result(value=str(result))
+                    return Structured_Result(result_overview=str(result))
                 except Exception as e:
                     error_message = f"Failed to cast response to string: {result}. Make sure agent functions return a string or Structured_Result object. Error: {str(e)}"
                     debug_print(debug, error_message)
@@ -128,7 +215,7 @@ class tangent:
                     "role": "tool",
                     "tool_call_id": tool_call.id,
                     "tool_name": name,
-                    "content": result.value,
+                    "content": result.result_overview,
                 }
             )
             partial_response.extracted_data.update(result.extracted_data)
@@ -141,12 +228,26 @@ class tangent:
         self,
         agent: Agent,
         messages: List,
+        image: Optional[str] = None,
+        images: Optional[List[str]] = None,
         extracted_data: dict = {},
         model_override: str = None,
         debug: bool = False,
         max_turns: int = float("inf"),
         execute_tools: bool = True,
     ):
+        # Handle image inputs
+        if agent.vision_enabled and (image or images):
+            processed_messages = []
+            for msg in messages:
+                if msg["role"] == "user":
+                    if image:
+                        msg["image"] = image
+                    if images:
+                        msg["images"] = images
+                processed_messages.append(msg)
+            messages = processed_messages
+            
         active_agent = agent
         extracted_data = copy.deepcopy(extracted_data)
         history = copy.deepcopy(messages)
@@ -233,6 +334,8 @@ class tangent:
         self,
         agent: Agent,
         messages: List,
+        image: Optional[str] = None,
+        images: Optional[List[str]] = None,
         extracted_data: dict = {},
         model_override: str = None,
         stream: bool = False,
@@ -244,12 +347,27 @@ class tangent:
             return self.run_and_stream(
                 agent=agent,
                 messages=messages,
+                image=image,
+                images=images,
                 extracted_data=extracted_data,
                 model_override=model_override,
                 debug=debug,
                 max_turns=max_turns,
                 execute_tools=execute_tools,
             )
+            
+        # Handle image inputs
+        if agent.vision_enabled and (image or images):
+            processed_messages = []
+            for msg in messages:
+                if msg["role"] == "user":
+                    if image:
+                        msg["image"] = image
+                    if images:
+                        msg["images"] = images
+                processed_messages.append(msg)
+            messages = processed_messages
+            
         active_agent = agent
         extracted_data = copy.deepcopy(extracted_data)
         history = copy.deepcopy(messages)
@@ -309,3 +427,38 @@ class tangent:
         
         # Return full message list with system message first
         return [system_message] + messages
+
+    def _process_vision_input(self, input_path: str) -> Union[dict, List[dict]]:
+        """Convert image input to API format."""
+        if is_url(input_path):
+            return {
+                "type": "image_url",
+                "image_url": {
+                    "url": input_path,
+                    "detail": "high"
+                }
+            }
+        
+        # Local file handling
+        if is_video(input_path):
+            frames = extract_video_frames(input_path)
+            return [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{frame}",
+                        "detail": "high"
+                    }
+                }
+                for frame in frames
+            ]
+        
+        # Single image file
+        base64_image = encode_image(input_path)
+        return {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{base64_image}",
+                "detail": "high"
+            }
+        }

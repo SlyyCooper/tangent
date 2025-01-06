@@ -17,11 +17,11 @@ class Structured_Result(BaseModel):
     Encapsulates the possible return values for an agent function.
 
     Attributes:
-        value (str): The result value as a string.
+        result_overview (str): The result result_overview as a string.
         agent (Agent): The agent instance, if applicable.
         extracted_data (dict): A dictionary of context variables.
     """
-    value: str = ""
+    result_overview: str = ""
     agent: Optional['Agent'] = None
     extracted_data: dict = {}
 
@@ -89,6 +89,24 @@ class InstructionsSource(str, Enum):
     CALLABLE = "callable"  # Function that returns string
     FILE = "file"         # Load from instructions/ directory
 
+# Internal Vision Types
+class _ImageUrl(BaseModel):
+    """Internal type for image URL configuration."""
+    url: str
+    detail: Literal["high"] = "high"  # Always use high detail
+
+class _ImageContent(BaseModel):
+    """Internal type for image content in messages."""
+    type: Literal["image_url"] = "image_url"
+    image_url: _ImageUrl
+
+class _TextContent(BaseModel):
+    """Internal type for text content in messages."""
+    type: Literal["text"] = "text"
+    text: str
+
+MessageContent = Union[str, List[Union[_TextContent, _ImageContent]]]
+
 class Agent(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     
@@ -103,6 +121,7 @@ class Agent(BaseModel):
     triage_assignment: Optional[str] = Field(None, description="Name of the triage agent this agent is assigned to")
     embedding_config: Optional[str] = None
     embedding_manager: Optional[Any] = None  # Use Any for runtime type checking
+    vision_enabled: bool = False  # Enable vision capabilities
     
     def setup_embeddings(self, config: 'EmbeddingConfig') -> 'Agent':
         """Initialize embedding support for this agent."""
@@ -133,6 +152,11 @@ class Agent(BaseModel):
             raise ValueError("Embeddings not configured. Call setup_embeddings first.")
             
         return self.embedding_manager.search(query, top_k)
+    
+    def setup_vision(self) -> 'Agent':
+        """Enable vision capabilities for this agent."""
+        self.vision_enabled = True
+        return self
 
 class Response(BaseModel):
     messages: List = []

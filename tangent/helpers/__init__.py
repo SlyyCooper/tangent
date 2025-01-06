@@ -1,10 +1,11 @@
 from tangent import tangent, Agent, Response
-from typing import Union
+from typing import Union, Optional, List
 
 def setup_agent(
     name: str = "Assistant",
     model: str = "gpt-4o",
-    instructions: str = "You are a helpful assistant."
+    instructions: str = "You are a helpful assistant.",
+    vision: bool = False
 ) -> tuple[tangent, Agent]:
     """
     Helper function to quickly set up a tangent client and agent.
@@ -13,6 +14,7 @@ def setup_agent(
         name: Name of the agent
         model: Model to use (gpt-4o or claude-3-5-sonnet-20241022)
         instructions: Agent instructions
+        vision: Whether to enable vision capabilities (default: False)
         
     Returns:
         Tuple of (tangent client, configured agent)
@@ -21,7 +23,8 @@ def setup_agent(
     agent = Agent(
         name=name,
         model=model,
-        instructions=instructions
+        instructions=instructions,
+        vision_enabled=vision  # Set vision flag directly
     )
     return client, agent
 
@@ -108,6 +111,8 @@ def process_chat(
     client: 'tangent',
     agent: 'Agent',
     message: str,
+    image: Optional[str] = None,
+    images: Optional[List[str]] = None,
     stream: bool = True
 ) -> Union[dict, 'Response']:
     """
@@ -118,6 +123,8 @@ def process_chat(
         client: The tangent client
         agent: The AI agent to chat with
         message: The message to send to the AI
+        image: Optional path or URL to a single image
+        images: Optional list of image paths or URLs
         stream: Whether to stream the response (default: True)
         
     Returns:
@@ -126,6 +133,8 @@ def process_chat(
     return client.run(
         agent=agent,
         messages=[{"role": "user", "content": message}],
+        image=image,
+        images=images,
         stream=stream
     )
 

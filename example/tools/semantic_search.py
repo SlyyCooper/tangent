@@ -41,7 +41,7 @@ def search_documents(query: str, top_k: int = 3) -> Structured_Result:
             for doc in results
         ])
         return Structured_Result(
-            value=f"Found {len(results)} relevant documents:\n\n{formatted_results}",
+            result_overview=f"Found {len(results)} relevant documents:\n\n{formatted_results}",
             extracted_data={
                 "last_search": {
                     "query": query,

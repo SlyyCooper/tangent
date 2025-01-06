@@ -15,6 +15,7 @@ A modern, lightweight framework for building AI agents with seamless model switc
 - 📚 **Document Management**: Built-in vector storage and semantic search
 - 🔀 **Triage System**: Automatic request routing between specialized agents
 - 🌊 **Real-time Streaming**: Async streaming support for responsive interactions
+- 👁️ **Vision Capabilities**: One-flag vision support for images, URLs, and videos
 
 ## Installation
 
@@ -55,7 +56,7 @@ while True:
 ## Model Support
 
 ### OpenAI Models
-- `"gpt-4o"` - Latest GPT-4 model
+- `"gpt-4o"` - Latest GPT-4 model with vision capabilities
 
 ### Anthropic Models
 - `"claude-3-5-sonnet-20241022"` - Latest Claude 3 Sonnet model
@@ -63,6 +64,50 @@ while True:
 Just change the model name and everything works automatically!
 
 ## Advanced Usage
+
+### Vision Agent
+
+```python
+from tangent import setup_agent, process_chat, show_ai_response
+
+# Enable vision with one flag
+client, agent = setup_agent(
+    name="Vision Bot",
+    model="gpt-4o",
+    instructions="You are a helpful assistant that can analyze images.",
+    vision=True
+)
+
+# Use with local images
+response = process_chat(
+    client, agent,
+    "What's in this image?",
+    image="path/to/image.jpg"
+)
+
+# Use with URLs
+response = process_chat(
+    client, agent,
+    "Analyze this image:",
+    image="https://example.com/image.jpg"
+)
+
+# Use with multiple images
+response = process_chat(
+    client, agent,
+    "Compare these:",
+    images=["image1.jpg", "image2.jpg"]
+)
+
+# Even works with videos
+response = process_chat(
+    client, agent,
+    "What happens in this video?",
+    image="video.mp4"  # Auto-extracts frames
+)
+
+show_ai_response(response)  # Works with streaming
+```
 
 ### Instruction Sources
 
@@ -190,11 +235,19 @@ while True:
 - Support both OpenAI and Anthropic models
 - Support multiple instruction sources (inline, callable, file-based)
 - Can be equipped with functions and tools
+- One-flag vision capabilities for image and video analysis
 
 ### Functions
 - Add custom capabilities to agents
 - Automatically handled across different models
 - Support for parallel execution
+
+### Vision Processing
+- Automatic handling of local images and URLs
+- Support for multiple images in one request
+- Automatic video frame extraction
+- High-resolution mode always enabled
+- Seamless streaming of vision responses
 
 ### Document Management
 - Built-in vector storage support
@@ -211,10 +264,10 @@ while True:
 
 ## Helper Functions
 
-- `setup_agent()`: Quick agent initialization
+- `setup_agent()`: Quick agent initialization with optional vision support
 - `get_user_input()`: Standardized input handling
 - `show_ai_response()`: Universal response display
-- `process_chat()`: Streamlined message processing
+- `process_chat()`: Streamlined message processing with image/video support
 
 ## Contributing
 

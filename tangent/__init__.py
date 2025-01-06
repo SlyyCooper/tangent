@@ -18,8 +18,8 @@ __all__ = [
     "create_triage_agent",
     "DocumentStore",
     "search_knowledge_base",
-    "setup_agent",
+    "setup_agent",           # ✅ Now supports vision=True
     "get_user_input",
-    "show_ai_response",  # ✅ Recommended for all response display
-    "process_chat"       # ✅ Recommended for chat processing
+    "show_ai_response",      # ✅ Recommended for all response display
+    "process_chat"           # ✅ Now supports image/images parameters
 ]

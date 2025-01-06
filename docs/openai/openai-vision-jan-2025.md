@@ -15,7 +15,7 @@ from openai import OpenAI
 client = OpenAI()
 
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-4o",
     messages=[
         {
             "role": "user",
@@ -59,7 +59,7 @@ image_path = "path_to_your_image.jpg"
 base64_image = encode_image(image_path)
 
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-4o",
     messages=[
         {
             "role": "user",
@@ -92,7 +92,7 @@ from openai import OpenAI
 
 client = OpenAI()
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-4o",
     messages=[
         {
             "role": "user",
@@ -134,7 +134,7 @@ from openai import OpenAI
 client = OpenAI()
 
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-4o",
     messages=[
         {
             "role": "user",
