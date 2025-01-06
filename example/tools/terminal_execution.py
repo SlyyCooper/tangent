@@ -32,7 +32,7 @@ def execute_terminal(command: str) -> Result:
             
         return Result(
             value=output,
-            context_variables={
+            extracted_data={
                 "command": command,
                 "exit_code": process.returncode
             }
@@ -41,5 +41,5 @@ def execute_terminal(command: str) -> Result:
     except Exception as e:
         return Result(
             value=f"Error: {str(e)}",
-            context_variables={"command": command}
+            extracted_data={"command": command}
         )

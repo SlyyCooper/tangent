@@ -76,7 +76,7 @@ class Agent(BaseModel):
 class Response(BaseModel):
     messages: List = []
     agent: Optional[Agent] = None
-    context_variables: dict = {}
+    extracted_data: dict = {}
 ```
 
 7. **Class: Result**
@@ -84,7 +84,7 @@ class Response(BaseModel):
 class Result(BaseModel):
     value: str = ""
     agent: Optional[Agent] = None
-    context_variables: dict = {}
+    extracted_data: dict = {}
 ```
 
 The file also imports these types from OpenAI:

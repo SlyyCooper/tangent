@@ -79,7 +79,7 @@ client, agent = setup_agent(
 )
 
 # 2. Callable Instructions (dynamic)
-def get_dynamic_instructions(context_variables=None):
+def get_dynamic_instructions(extracted_data=None):
     """Dynamic instructions based on time of day."""
     from datetime import datetime
     hour = datetime.now().hour

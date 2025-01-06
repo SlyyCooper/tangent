@@ -34,7 +34,7 @@ def web_search(query: str, max_results: int = 3) -> Result:
         
         return Result(
             value=formatted_results,
-            context_variables={
+            extracted_data={
                 "last_web_search": {
                     "query": query,
                     "urls": [result.get('url') for result in response.get('results', [])[:max_results]]
@@ -93,7 +93,7 @@ def web_extract(urls: list[str]) -> Result:
             
         return Result(
             value="\n\n".join(formatted_results),
-            context_variables={
+            extracted_data={
                 "last_web_extract": {
                     "successful_urls": [result.get('url') for result in response.get('results', [])],
                     "failed_urls": [failed.get('url') for failed in response.get('failed_results', [])]

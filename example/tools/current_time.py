@@ -16,7 +16,7 @@ def current_time() -> Result:
         
         return Result(
             value=f"The current time is {current}",
-            context_variables={
+            extracted_data={
                 "current_time": current
             }
         )

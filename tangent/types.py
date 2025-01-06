@@ -19,11 +19,11 @@ class Result(BaseModel):
     Attributes:
         value (str): The result value as a string.
         agent (Agent): The agent instance, if applicable.
-        context_variables (dict): A dictionary of context variables.
+        extracted_data (dict): A dictionary of context variables.
     """
     value: str = ""
     agent: Optional['Agent'] = None
-    context_variables: dict = {}
+    extracted_data: dict = {}
 
 # Type alias for agent functions
 AgentFunction = Callable[..., Union[str, 'Agent', dict, Result]]
@@ -137,4 +137,4 @@ class Agent(BaseModel):
 class Response(BaseModel):
     messages: List = []
     agent: Optional[Agent] = None
-    context_variables: dict = {}
+    extracted_data: dict = {}

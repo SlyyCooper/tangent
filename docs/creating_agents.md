@@ -59,7 +59,7 @@ my_simple_agent = Agent(
 
 Key points about this agent:
 - **name** sets the agent’s identifier for debugging or usage in multi-agent handoffs.
-- **instructions** become the `system` prompt. They can be a **string** or a **callable** (i.e., a function) that returns a string dynamically. If you pass in a callable, it may optionally take `context_variables` as a parameter to inject dynamic context.
+- **instructions** become the `system` prompt. They can be a **string** or a **callable** (i.e., a function) that returns a string dynamically. If you pass in a callable, it may optionally take `extracted_data` as a parameter to inject dynamic context.
 
 ---
 
@@ -111,11 +111,11 @@ If `execute_tools=False`, the library will **interrupt** whenever a tool call is
 
 ## 5. Using Context Variables in `instructions`
 
-If you want your agent’s instructions to be dynamic, you can define `instructions` as a function that optionally accepts `context_variables`. For example:
+If you want your agent’s instructions to be dynamic, you can define `instructions` as a function that optionally accepts `extracted_data`. For example:
 
 ```python
-def dynamic_instructions(context_variables):
-    user_name = context_variables.get("user_name", "user")
+def dynamic_instructions(extracted_data):
+    user_name = extracted_data.get("user_name", "user")
     return f"You are a helpful agent. Always greet {user_name} politely."
 
 my_dynamic_agent = Agent(
@@ -124,13 +124,13 @@ my_dynamic_agent = Agent(
 )
 ```
 
-Then, when you run the agent, you supply `context_variables`:
+Then, when you run the agent, you supply `extracted_data`:
 
 ```python
 response = client.run(
     agent=my_dynamic_agent,
     messages=[{"role": "user", "content": "Hi!"}],
-    context_variables={"user_name": "Alice"}
+    extracted_data={"user_name": "Alice"}
 )
 ```
 

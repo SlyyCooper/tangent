@@ -118,7 +118,7 @@ def handle_tool_calls(
     self,
     tool_calls: List[ChatCompletionMessageToolCall],
     functions: List[AgentFunction],
-    context_variables: dict,
+    extracted_data: dict,
     debug: bool,
 ) -> Response:
     function_map = {f.__name__: f for f in functions}
@@ -254,11 +254,11 @@ def greet_user(name: str):
     """
     return Result(
         value=f"Hello, {name}!",
-        context_variables={"user_name": name}
+        extracted_data={"user_name": name}
     )
 ```
 
-When tangent executes that function, the `context_variables` get merged back into the conversation’s context.  
+When tangent executes that function, the `extracted_data` get merged back into the conversation’s context.  
 
 ---
 

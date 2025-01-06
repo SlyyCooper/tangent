@@ -42,7 +42,7 @@ def search_documents(query: str, top_k: int = 3) -> Result:
         ])
         return Result(
             value=f"Found {len(results)} relevant documents:\n\n{formatted_results}",
-            context_variables={
+            extracted_data={
                 "last_search": {
                     "query": query,
                     "results": [doc.id for doc in results]

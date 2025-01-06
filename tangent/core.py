@@ -21,7 +21,7 @@ from .types import (
     InstructionsSource,
 )
 
-__CTX_VARS_NAME__ = "context_variables"
+__CTX_VARS_NAME__ = "extracted_data"
 
 
 class tangent:
@@ -34,14 +34,14 @@ class tangent:
         self,
         agent: Agent,
         history: List,
-        context_variables: dict,
+        extracted_data: dict,
         model_override: str,
         stream: bool,
         debug: bool,
     ) -> ChatCompletionMessage:
-        context_variables = defaultdict(str, context_variables)
+        extracted_data = defaultdict(str, extracted_data)
         instructions = (
-            agent.instructions(context_variables)
+            agent.instructions(extracted_data)
             if callable(agent.instructions)
             else agent.instructions
         )
@@ -49,7 +49,7 @@ class tangent:
         debug_print(debug, "Getting chat completion for...:", messages)
 
         tools = [function_to_json(f) for f in agent.functions]
-        # hide context_variables from model
+        # hide extracted_data from model
         for tool in tools:
             params = tool["function"]["parameters"]
             params["properties"].pop(__CTX_VARS_NAME__, None)
@@ -91,12 +91,12 @@ class tangent:
         self,
         tool_calls: List[ChatCompletionMessageToolCall],
         functions: List[AgentFunction],
-        context_variables: dict,
+        extracted_data: dict,
         debug: bool,
     ) -> Response:
         function_map = {f.__name__: f for f in functions}
         partial_response = Response(
-            messages=[], agent=None, context_variables={})
+            messages=[], agent=None, extracted_data={})
 
         for tool_call in tool_calls:
             name = tool_call.function.name
@@ -117,9 +117,9 @@ class tangent:
                 debug, f"Processing tool call: {name} with arguments {args}")
 
             func = function_map[name]
-            # pass context_variables to agent functions
+            # pass extracted_data to agent functions
             if __CTX_VARS_NAME__ in func.__code__.co_varnames:
-                args[__CTX_VARS_NAME__] = context_variables
+                args[__CTX_VARS_NAME__] = extracted_data
             raw_result = function_map[name](**args)
 
             result: Result = self.handle_function_result(raw_result, debug)
@@ -131,7 +131,7 @@ class tangent:
                     "content": result.value,
                 }
             )
-            partial_response.context_variables.update(result.context_variables)
+            partial_response.extracted_data.update(result.extracted_data)
             if result.agent:
                 partial_response.agent = result.agent
 
@@ -141,14 +141,14 @@ class tangent:
         self,
         agent: Agent,
         messages: List,
-        context_variables: dict = {},
+        extracted_data: dict = {},
         model_override: str = None,
         debug: bool = False,
         max_turns: int = float("inf"),
         execute_tools: bool = True,
     ):
         active_agent = agent
-        context_variables = copy.deepcopy(context_variables)
+        extracted_data = copy.deepcopy(extracted_data)
         history = copy.deepcopy(messages)
         init_len = len(messages)
 
@@ -172,7 +172,7 @@ class tangent:
             completion = self.get_chat_completion(
                 agent=active_agent,
                 history=history,
-                context_variables=context_variables,
+                extracted_data=extracted_data,
                 model_override=model_override,
                 stream=True,
                 debug=debug,
@@ -212,12 +212,12 @@ class tangent:
                 )
                 tool_calls.append(tool_call_object)
 
-            # handle function calls, updating context_variables, and switching agents
+            # handle function calls, updating extracted_data, and switching agents
             partial_response = self.handle_tool_calls(
-                tool_calls, active_agent.functions, context_variables, debug
+                tool_calls, active_agent.functions, extracted_data, debug
             )
             history.extend(partial_response.messages)
-            context_variables.update(partial_response.context_variables)
+            extracted_data.update(partial_response.extracted_data)
             if partial_response.agent:
                 active_agent = partial_response.agent
 
@@ -225,7 +225,7 @@ class tangent:
             "response": Response(
                 messages=history[init_len:],
                 agent=active_agent,
-                context_variables=context_variables,
+                extracted_data=extracted_data,
             )
         }
 
@@ -233,7 +233,7 @@ class tangent:
         self,
         agent: Agent,
         messages: List,
-        context_variables: dict = {},
+        extracted_data: dict = {},
         model_override: str = None,
         stream: bool = False,
         debug: bool = False,
@@ -244,14 +244,14 @@ class tangent:
             return self.run_and_stream(
                 agent=agent,
                 messages=messages,
-                context_variables=context_variables,
+                extracted_data=extracted_data,
                 model_override=model_override,
                 debug=debug,
                 max_turns=max_turns,
                 execute_tools=execute_tools,
             )
         active_agent = agent
-        context_variables = copy.deepcopy(context_variables)
+        extracted_data = copy.deepcopy(extracted_data)
         history = copy.deepcopy(messages)
         init_len = len(messages)
 
@@ -261,7 +261,7 @@ class tangent:
             completion = self.get_chat_completion(
                 agent=active_agent,
                 history=history,
-                context_variables=context_variables,
+                extracted_data=extracted_data,
                 model_override=model_override,
                 stream=stream,
                 debug=debug,
@@ -277,22 +277,22 @@ class tangent:
                 debug_print(debug, "Ending turn.")
                 break
 
-            # handle function calls, updating context_variables, and switching agents
+            # handle function calls, updating extracted_data, and switching agents
             partial_response = self.handle_tool_calls(
-                message.tool_calls, active_agent.functions, context_variables, debug
+                message.tool_calls, active_agent.functions, extracted_data, debug
             )
             history.extend(partial_response.messages)
-            context_variables.update(partial_response.context_variables)
+            extracted_data.update(partial_response.extracted_data)
             if partial_response.agent:
                 active_agent = partial_response.agent
 
         return Response(
             messages=history[init_len:],
             agent=active_agent,
-            context_variables=context_variables,
+            extracted_data=extracted_data,
         )
 
-    def _prepare_messages(self, agent: Agent, messages: list, context_variables: dict = None) -> list:
+    def _prepare_messages(self, agent: Agent, messages: list, extracted_data: dict = None) -> list:
         """Prepare messages for the API call."""
         # Get the agent's instructions
         instructions = get_instructions(agent)
@@ -304,8 +304,8 @@ class tangent:
         }
         
         # Add context variables if provided
-        if context_variables:
-            system_message["context_variables"] = context_variables
+        if extracted_data:
+            system_message["extracted_data"] = extracted_data
         
         # Return full message list with system message first
         return [system_message] + messages

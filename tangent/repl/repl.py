@@ -58,7 +58,7 @@ def pretty_print_messages(messages) -> None:
 
 
 def run_chat_loop(
-    starting_agent, context_variables=None, stream=False, debug=False
+    starting_agent, extracted_data=None, stream=False, debug=False
 ) -> None:
     client = tangent()
     print("Starting tangent CLI 🦊")
@@ -73,7 +73,7 @@ def run_chat_loop(
         response = client.run(
             agent=agent,
             messages=messages,
-            context_variables=context_variables or {},
+            extracted_data=extracted_data or {},
             stream=stream,
             debug=debug,
         )

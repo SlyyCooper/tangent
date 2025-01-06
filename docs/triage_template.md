@@ -105,7 +105,7 @@ context = {
 }
 
 if __name__ == "__main__":
-    run_chat_loop(triage_agent, context_variables=context)
+    run_chat_loop(triage_agent, extracted_data=context)
 ```
 
 ## Flow Explanation
