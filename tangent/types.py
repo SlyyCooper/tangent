@@ -12,7 +12,7 @@ from enum import Enum
 if TYPE_CHECKING:
     from .embeddings import EmbeddingManager
 
-class Result(BaseModel):
+class Structured_Result(BaseModel):
     """
     Encapsulates the possible return values for an agent function.
 
@@ -26,7 +26,7 @@ class Result(BaseModel):
     extracted_data: dict = {}
 
 # Type alias for agent functions
-AgentFunction = Callable[..., Union[str, 'Agent', dict, Result]]
+AgentFunction = Callable[..., Union[str, 'Agent', dict, Structured_Result]]
 
 # 1. Document Types
 @dataclass

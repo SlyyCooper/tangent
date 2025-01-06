@@ -17,7 +17,7 @@ from .types import (
     ChatCompletionMessageToolCall,
     Function,
     Response,
-    Result,
+    Structured_Result,
     InstructionsSource,
 )
 
@@ -69,21 +69,21 @@ class tangent:
 
         return self.client.chat.completions.create(**create_params)
 
-    def handle_function_result(self, result, debug) -> Result:
+    def handle_function_result(self, result, debug) -> Structured_Result:
         match result:
-            case Result() as result:
+            case Structured_Result() as result:
                 return result
 
             case Agent() as agent:
-                return Result(
+                return Structured_Result(
                     value=json.dumps({"assistant": agent.name}),
                     agent=agent,
                 )
             case _:
                 try:
-                    return Result(value=str(result))
+                    return Structured_Result(value=str(result))
                 except Exception as e:
-                    error_message = f"Failed to cast response to string: {result}. Make sure agent functions return a string or Result object. Error: {str(e)}"
+                    error_message = f"Failed to cast response to string: {result}. Make sure agent functions return a string or Structured_Result object. Error: {str(e)}"
                     debug_print(debug, error_message)
                     raise TypeError(error_message)
 
@@ -122,7 +122,7 @@ class tangent:
                 args[__CTX_VARS_NAME__] = extracted_data
             raw_result = function_map[name](**args)
 
-            result: Result = self.handle_function_result(raw_result, debug)
+            result: Structured_Result = self.handle_function_result(raw_result, debug)
             partial_response.messages.append(
                 {
                     "role": "tool",

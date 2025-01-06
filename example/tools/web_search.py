@@ -1,4 +1,4 @@
-from tangent.types import Result
+from tangent.types import Structured_Result
 import os
 from tavily import TavilyClient
 
@@ -9,7 +9,7 @@ except Exception as e:
     print(f"Warning: Failed to initialize Tavily client. Make sure TAVILY_API_KEY is set. Error: {e}")
     tavily_client = None
 
-def web_search(query: str, max_results: int = 3) -> Result:
+def web_search(query: str, max_results: int = 3) -> Structured_Result:
     """
     Search the web using Tavily API and return relevant results.
     
@@ -18,10 +18,10 @@ def web_search(query: str, max_results: int = 3) -> Result:
         max_results: Maximum number of results to return (default: 3)
         
     Returns:
-        Result object containing formatted search results and context
+        Structured_Result object containing formatted search results and context
     """
     if not tavily_client:
-        return Result(value="Error: Tavily API key not configured. Please set TAVILY_API_KEY environment variable.")
+        return Structured_Result(value="Error: Tavily API key not configured. Please set TAVILY_API_KEY environment variable.")
     
     try:
         response = tavily_client.search(query)
@@ -32,7 +32,7 @@ def web_search(query: str, max_results: int = 3) -> Result:
             for result in response.get('results', [])[:max_results]
         ])
         
-        return Result(
+        return Structured_Result(
             value=formatted_results,
             extracted_data={
                 "last_web_search": {
@@ -42,9 +42,9 @@ def web_search(query: str, max_results: int = 3) -> Result:
             }
         )
     except Exception as e:
-        return Result(value=f"Error performing web search: {str(e)}")
+        return Structured_Result(value=f"Error performing web search: {str(e)}")
 
-def web_extract(urls: list[str]) -> Result:
+def web_extract(urls: list[str]) -> Structured_Result:
     """
     Extract raw content from specific URLs using Tavily Extract API.
     
@@ -52,16 +52,16 @@ def web_extract(urls: list[str]) -> Result:
         urls: List of URLs to extract content from (max 20 URLs per request)
         
     Returns:
-        Result object containing extracted content and metadata
+        Structured_Result object containing extracted content and metadata
     """
     if not tavily_client:
-        return Result(value="Error: Tavily API key not configured. Please set TAVILY_API_KEY environment variable.")
+        return Structured_Result(value="Error: Tavily API key not configured. Please set TAVILY_API_KEY environment variable.")
     
     if not urls:
-        return Result(value="Error: No URLs provided for extraction.")
+        return Structured_Result(value="Error: No URLs provided for extraction.")
         
     if len(urls) > 20:
-        return Result(value="Error: Maximum of 20 URLs allowed per request.")
+        return Structured_Result(value="Error: Maximum of 20 URLs allowed per request.")
     
     try:
         response = tavily_client.extract(urls=urls)
@@ -91,7 +91,7 @@ def web_extract(urls: list[str]) -> Result:
             formatted_results.append("\nFailed extractions:")
             formatted_results.extend(failed_extracts)
             
-        return Result(
+        return Structured_Result(
             value="\n\n".join(formatted_results),
             extracted_data={
                 "last_web_extract": {
@@ -101,4 +101,4 @@ def web_extract(urls: list[str]) -> Result:
             }
         )
     except Exception as e:
-        return Result(value=f"Error performing web extraction: {str(e)}")
+        return Structured_Result(value=f"Error performing web extraction: {str(e)}")

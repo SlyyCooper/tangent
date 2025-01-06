@@ -1,7 +1,7 @@
 from typing import List
-from ..types import Result, Agent
+from ..types import Structured_Result, Agent
 
-def search_knowledge_base(query: str, top_k: int = 5, extracted_data: dict = None, agent: Agent = None) -> Result:
+def search_knowledge_base(query: str, top_k: int = 5, extracted_data: dict = None, agent: Agent = None) -> Structured_Result:
     """
     Search the agent's knowledge base for relevant documents.
     
@@ -12,7 +12,7 @@ def search_knowledge_base(query: str, top_k: int = 5, extracted_data: dict = Non
         agent: The agent instance
     """
     if not agent or not agent._embedding_manager:
-        return Result(
+        return Structured_Result(
             value="Knowledge base search is not configured for this agent.",
             extracted_data=extracted_data or {}
         )
@@ -23,7 +23,7 @@ def search_knowledge_base(query: str, top_k: int = 5, extracted_data: dict = Non
         
         # Format results
         if not documents:
-            return Result(
+            return Structured_Result(
                 value="No relevant documents found.",
                 extracted_data=extracted_data or {}
             )
@@ -36,7 +36,7 @@ def search_knowledge_base(query: str, top_k: int = 5, extracted_data: dict = Non
             for doc in documents
         ])
         
-        return Result(
+        return Structured_Result(
             value=formatted_results,
             extracted_data={
                 **(extracted_data or {}),
@@ -46,7 +46,7 @@ def search_knowledge_base(query: str, top_k: int = 5, extracted_data: dict = Non
         )
         
     except Exception as e:
-        return Result(
+        return Structured_Result(
             value=f"Error searching knowledge base: {str(e)}",
             extracted_data=extracted_data or {}
         ) 

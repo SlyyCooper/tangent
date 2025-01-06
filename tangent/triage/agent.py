@@ -1,5 +1,5 @@
 from typing import Dict, Optional, List
-from ..types import Agent, Result
+from ..types import Agent, Structured_Result
 import sys
 
 def create_transfer_functions(managed_agents: Dict[str, Agent], triage_agent: Agent) -> List:

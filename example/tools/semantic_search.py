@@ -1,4 +1,4 @@
-from tangent import Result, DocumentStore
+from tangent import Structured_Result, DocumentStore
 from tangent.types import EmbeddingConfig, QdrantConfig
 import os
 
@@ -20,7 +20,7 @@ doc_store = DocumentStore(
     )
 )
 
-def search_documents(query: str, top_k: int = 3) -> Result:
+def search_documents(query: str, top_k: int = 3) -> Structured_Result:
     """
     Search documents using semantic similarity.
     
@@ -29,7 +29,7 @@ def search_documents(query: str, top_k: int = 3) -> Result:
         top_k: Number of top results to return (default: 3)
         
     Returns:
-        Result object containing formatted search results and context
+        Structured_Result object containing formatted search results and context
     """
     try:
         results = doc_store.search(query, top_k)
@@ -40,7 +40,7 @@ def search_documents(query: str, top_k: int = 3) -> Result:
             f"Additional Info: {doc.metadata}"
             for doc in results
         ])
-        return Result(
+        return Structured_Result(
             value=f"Found {len(results)} relevant documents:\n\n{formatted_results}",
             extracted_data={
                 "last_search": {
@@ -50,7 +50,7 @@ def search_documents(query: str, top_k: int = 3) -> Result:
             }
         )
     except Exception as e:
-        return Result(value=f"Error searching documents: {str(e)}")
+        return Structured_Result(value=f"Error searching documents: {str(e)}")
 
 def get_document_count() -> int:
     """

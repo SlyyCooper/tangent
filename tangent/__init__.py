@@ -1,5 +1,5 @@
 from .core import tangent
-from .types import Agent, Response, Result
+from .types import Agent, Response, Structured_Result
 from .repl import run_chat_loop, process_and_print_streaming_response, pretty_print_messages  # Legacy display functions
 from .triage import create_triage_agent
 from .embeddings import DocumentStore
@@ -11,7 +11,7 @@ __all__ = [
     "tangent",
     "Agent",
     "Response",
-    "Result",
+    "Structured_Result",
     "run_chat_loop",
     "process_and_print_streaming_response",  # Legacy: use show_ai_response instead
     "pretty_print_messages",                 # Legacy: use show_ai_response instead
