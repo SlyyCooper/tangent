@@ -4,10 +4,11 @@
   <img src="public/tangent.webp" alt="Tangent" width="600"/>
 </div>
 
-A modern, lightweight framework for building AI agents by [SlyyCooper](https://github.com/SlyyCooper).
+A modern, lightweight framework for building AI agents with seamless model switching between OpenAI and Anthropic. Created by [SlyyCooper](https://github.com/SlyyCooper).
 
 ## Features
 
+- 🔄 **Unified Model Interface**: Switch between OpenAI and Anthropic models by just changing the model name
 - 🛠 **Flexible Instructions**: Support for inline, callable, and file-based instructions
 - 🛠️ **Rich Helper Functions**: Streamlined setup and interaction with AI agents
 - 🔧 **Function Calling**: Seamless tool integration across both providers
@@ -33,10 +34,10 @@ pip install git+https://github.com/SlyyCooper/tangent.git
 ```python
 from tangent import setup_agent, get_user_input, show_ai_response, process_chat
 
-# Quick setup
+# Quick setup - works with both OpenAI and Anthropic
 client, agent = setup_agent(
     name="ChatBot",
-    model="gpt-4o",
+    model="gpt-4o",  # or "claude-3-5-sonnet-20241022"
     instructions="You are a helpful assistant."
 )
 
@@ -53,7 +54,14 @@ while True:
 ```
 
 ## Model Support
+
+### OpenAI Models
 - `"gpt-4o"` - Latest GPT-4 model with vision capabilities
+
+### Anthropic Models
+- `"claude-3-5-sonnet-20241022"` - Latest Claude 3 Sonnet model
+
+Just change the model name and everything works automatically!
 
 ## Advanced Usage
 
@@ -224,6 +232,7 @@ while True:
 
 ### Agents
 - Represent AI assistants with specific capabilities
+- Support both OpenAI and Anthropic models
 - Support multiple instruction sources (inline, callable, file-based)
 - Can be equipped with functions and tools
 - One-flag vision capabilities for image and video analysis

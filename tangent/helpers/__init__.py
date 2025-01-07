@@ -12,7 +12,7 @@ def setup_agent(
     
     Args:
         name: Name of the agent
-        model: Model to use (gpt-4o)
+        model: Model to use (gpt-4o or claude-3-5-sonnet-20241022)
         instructions: Agent instructions
         vision: Whether to enable vision capabilities (default: False)
         

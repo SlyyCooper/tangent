@@ -37,7 +37,7 @@ def get_user_info(user_id: str) -> Structured_Result:
 # 3. Create an agent with the function
 agent = Agent(
     name="UserInfoAgent",
-    model="gpt-4o",
+    model="gpt-4o",  # or "claude-3-5-sonnet-20241022"
     instructions="You help retrieve user information.",
     functions=[get_user_info]
 )
@@ -211,6 +211,24 @@ def smart_transfer(query: str) -> Structured_Result:
     )
 ```
 
+## 6. Using with Different Models
 
+The `Structured_Result` format works seamlessly with both OpenAI and Anthropic models:
+
+```python
+# OpenAI Agent
+openai_agent = Agent(
+    name="OpenAIAgent",
+    model="gpt-4o",
+    functions=[your_structured_function]
+)
+
+# Anthropic Agent
+anthropic_agent = Agent(
+    name="AnthropicAgent",
+    model="claude-3-5-sonnet-20241022",
+    functions=[your_structured_function]
+)
+```
 
 The tangent library automatically handles the conversion between different model formats while maintaining the structured output functionality.
