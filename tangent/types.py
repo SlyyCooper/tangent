@@ -12,10 +12,6 @@ from enum import Enum
 if TYPE_CHECKING:
     from .embeddings import EmbeddingManager
 
-class RateLimitError(Exception):
-    """Error raised when API rate limit is exceeded."""
-    pass
-
 class Structured_Result(BaseModel):
     """
     Encapsulates the possible return values for an agent function.
