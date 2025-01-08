@@ -26,18 +26,64 @@ class AgentStepInfo:
 	max_steps: int
 
 
-class ActionResult(BaseModel):
-	"""Result of executing an action"""
-
-	is_done: Optional[bool] = False
-	extracted_content: Optional[str] = None
-	error: Optional[str] = None
-	include_in_memory: bool = False  # whether to include in past messages as context or not
+class ActionResult(Structured_Result):
+	"""Result of executing an action that extends Tangent's Structured_Result.
+	
+	This class provides a structured way to represent browser action results while
+	maintaining compatibility with Tangent's output format.
+	
+	Attributes:
+		result_overview (str): A human-readable summary of the action result
+		extracted_data (dict): Structured data including execution status and any errors
+	"""
+	model_config = ConfigDict(arbitrary_types_allowed=True)
+	
+	@classmethod
+	def create(
+		cls,
+		content: Optional[str] = None,
+		error: Optional[str] = None,
+		is_done: bool = False,
+		include_in_memory: bool = False
+	) -> 'ActionResult':
+		"""Create an ActionResult with the proper structured format.
+		
+		Args:
+			content: The action result content or message
+			error: Any error that occurred during execution
+			is_done: Whether this action completes the task
+			include_in_memory: Whether to include in conversation memory
+			
+		Returns:
+			An ActionResult instance in Tangent's structured format
+		"""
+		return cls(
+			result_overview=content or error or "",
+			extracted_data={
+				"is_done": is_done,
+				"error": error,
+				"include_in_memory": include_in_memory
+			}
+		)
+	
+	@property
+	def is_done(self) -> bool:
+		"""Whether this action completes the task."""
+		return self.extracted_data.get("is_done", False)
+	
+	@property
+	def error(self) -> Optional[str]:
+		"""Any error that occurred during execution."""
+		return self.extracted_data.get("error")
+	
+	@property
+	def include_in_memory(self) -> bool:
+		"""Whether to include in conversation memory."""
+		return self.extracted_data.get("include_in_memory", False)
 
 
 class AgentBrain(BaseModel):
 	"""Current state of the agent"""
-
 	evaluation: str
 	memory: str
 	next_goal: str
@@ -108,18 +154,51 @@ class AgentOutput(Structured_Result):
 
 
 class AgentHistory(BaseModel):
-	"""History item for agent actions"""
-
+	"""History item for agent actions with structured output support.
+	
+	This class represents a historical record of agent actions, including the model's output,
+	action results, and browser state. It supports conversion to Tangent's structured format
+	for consistent output handling.
+	
+	Attributes:
+		model_output: The agent's output in structured format
+		result: List of action results
+		state: The browser state at this point in history
+	"""
 	model_output: AgentOutput | None
 	result: list[ActionResult]
 	state: BrowserStateHistory
 
 	model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
 
+	def to_structured_result(self) -> Structured_Result:
+		"""Convert history item to Tangent's structured format.
+		
+		Returns:
+			A Structured_Result containing the history item's data in Tangent's format
+		"""
+		return Structured_Result(
+			result_overview=self.model_output.result_overview if self.model_output else "",
+			extracted_data={
+				"results": [r.model_dump() for r in self.result],
+				"state": self.state.model_dump()
+			}
+		)
+
 	@staticmethod
 	def get_interacted_element(
 		model_output: AgentOutput, selector_map: SelectorMap
 	) -> list[DOMHistoryElement | None]:
+		"""Get the DOM elements that were interacted with during this history item.
+		
+		Args:
+			model_output: The agent's output containing actions
+			selector_map: Map of element indices to DOM elements
+			
+		Returns:
+			List of DOM elements that were interacted with, or None for actions
+			that didn't interact with elements
+		"""
 		elements = []
 		for action in model_output.action:
 			index = action.get_index()
@@ -131,8 +210,12 @@ class AgentHistory(BaseModel):
 		return elements
 
 	def model_dump(self, **kwargs) -> Dict[str, Any]:
-		"""Custom serialization handling circular references"""
-
+		"""Custom serialization handling circular references.
+		
+		Returns:
+			Dictionary representation of the history item with proper handling
+			of circular references in the DOM tree
+		"""
 		# Handle action serialization
 		model_output_dump = None
 		if self.model_output:
