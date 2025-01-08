@@ -8,7 +8,6 @@ A modern, lightweight framework for building AI agents with seamless model switc
 
 ## Features
 
-- 🔄 **Unified Model Interface**: Switch between OpenAI and Anthropic models by just changing the model name
 - 🛠 **Flexible Instructions**: Support for inline, callable, and file-based instructions
 - 🛠️ **Rich Helper Functions**: Streamlined setup and interaction with AI agents
 - 🔧 **Function Calling**: Seamless tool integration across both providers
@@ -34,10 +33,10 @@ pip install git+https://github.com/SlyyCooper/tangent.git
 ```python
 from tangent import setup_agent, get_user_input, show_ai_response, process_chat
 
-# Quick setup - works with both OpenAI and Anthropic
+# Quick setup
 client, agent = setup_agent(
     name="ChatBot",
-    model="gpt-4o",  # or "claude-3-5-sonnet-20241022"
+    model="gpt-4o",
     instructions="You are a helpful assistant."
 )
 
@@ -56,12 +55,7 @@ while True:
 ## Model Support
 
 ### OpenAI Models
-- `"gpt-4o"` - Latest GPT-4 model with vision capabilities
-
-### Anthropic Models
-- `"claude-3-5-sonnet-20241022"` - Latest Claude 3 Sonnet model
-
-Just change the model name and everything works automatically!
+- `"gpt-4o"` - Latest GPT-4o model with vision capabilities
 
 ## Advanced Usage
 

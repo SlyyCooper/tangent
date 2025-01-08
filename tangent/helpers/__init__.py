@@ -1,6 +1,7 @@
 from ..core import tangent
 from ..types import Agent, Response
 from typing import Union, Optional, List
+import cv2  # Add OpenCV import
 
 def setup_agent(
     name: str = "Assistant",
@@ -10,6 +11,7 @@ def setup_agent(
 ) -> tuple[tangent, Agent]:
     """
     Helper function to quickly set up a tangent client and agent.
+    Now with OpenCV support for enhanced vision capabilities.
     
     Args:
         name: Name of the agent
@@ -20,12 +22,20 @@ def setup_agent(
     Returns:
         Tuple of (tangent client, configured agent)
     """
+    # Verify OpenCV is available when vision is enabled
+    if vision:
+        try:
+            cv2_version = cv2.__version__
+            print(f"Using OpenCV version {cv2_version} for vision capabilities")
+        except ImportError:
+            print("Warning: OpenCV not found. Vision capabilities may be limited.")
+    
     client = tangent()
     agent = Agent(
         name=name,
         model=model,
         instructions=instructions,
-        vision_enabled=vision  # Set vision flag directly
+        vision_enabled=vision
     )
     return client, agent
 

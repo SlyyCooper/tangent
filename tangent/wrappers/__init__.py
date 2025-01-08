@@ -1,8 +1,17 @@
 """
-Browser wrapper module.
-Provides low-level browser automation functionality.
+Tangent wrappers package.
 """
 
-from .browser_wrapper import BrowserWrapper
+from .browser.browser import Browser, BrowserConfig
+from .browser.context import BrowserContext, BrowserContextConfig
+from .controller.service import Controller
+from .dom.service import DomService
 
-__all__ = ["BrowserWrapper"] 
+__all__ = [
+    'Browser',
+    'BrowserConfig',
+    'BrowserContext',
+    'BrowserContextConfig',
+    'Controller',
+    'DomService',
+] 

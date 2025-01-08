@@ -21,15 +21,15 @@ dependencies = [
     "pre-commit",
     "instructor",
     "qdrant-client>=1.7.0",
-    "browser-use",
-    "playwright"
+    "playwright>=1.49.0",
+    "opencv-python>=4.9.0"
 ]
 
 [project.scripts]
 post_install = "tangent.helpers.post_install:main"
 
 [tool.setuptools]
-packages = ["tangent", "tangent.repl", "tangent.tools", "tangent.triage", "tangent.helpers"]
+packages = ["tangent", "tangent.repl", "tangent.tools", "tangent.triage", "tangent.helpers", "tangent.wrappers"]
 
 [tool.autopep8]
 max_line_length = 120
