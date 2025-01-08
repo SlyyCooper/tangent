@@ -20,11 +20,16 @@ dependencies = [
     "tqdm",
     "pre-commit",
     "instructor",
-    "qdrant-client>=1.7.0"
+    "qdrant-client>=1.7.0",
+    "browser-use",
+    "playwright"
 ]
 
+[project.scripts]
+post_install = "tangent.helpers.post_install:main"
+
 [tool.setuptools]
-packages = ["tangent", "tangent.repl", "tangent.tools", "tangent.triage"]
+packages = ["tangent", "tangent.repl", "tangent.tools", "tangent.triage", "tangent.helpers"]
 
 [tool.autopep8]
 max_line_length = 120

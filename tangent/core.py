@@ -22,10 +22,6 @@ from .types import (
     Function,
     Response,
     Structured_Result,
-    InstructionsSource,
-    _ImageContent,
-    _TextContent,
-    MessageContent,
 )
 
 __CTX_VARS_NAME__ = "extracted_data"
