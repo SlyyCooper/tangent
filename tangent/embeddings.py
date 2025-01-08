@@ -15,7 +15,6 @@ from .types import (
     Document,
     DocumentChunk,
     EmbeddingConfig,
-    VectorDBConfig,
     QdrantConfig,
     PineconeConfig,
     CustomVectorDBConfig

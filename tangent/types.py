@@ -114,14 +114,14 @@ class Agent(BaseModel):
     model: str = "gpt-4o"
     instructions: Union[str, Callable[[], str], Literal["from_file"]] = "You are a helpful agent."
     instructions_source: InstructionsSource = InstructionsSource.INLINE
-    instructions_dir: str = "instructions"  # Directory to load instructions from
+    instructions_dir: str = "instructions"
     functions: List[AgentFunction] = []
     tool_choice: str = None
     parallel_tool_calls: bool = True
     triage_assignment: Optional[str] = Field(None, description="Name of the triage agent this agent is assigned to")
     embedding_config: Optional[str] = None
-    embedding_manager: Optional[Any] = None  # Use Any for runtime type checking
-    vision_enabled: bool = False  # Enable vision capabilities
+    embedding_manager: Any = None  # Use Any for runtime, EmbeddingManager is checked by TYPE_CHECKING
+    vision_enabled: bool = False
     
     def setup_embeddings(self, config: 'EmbeddingConfig') -> 'Agent':
         """Initialize embedding support for this agent."""
