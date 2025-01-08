@@ -1,9 +1,9 @@
 from tangent import setup_agent, get_user_input, show_ai_response, process_chat
 
-# Quick setup
+# Quick setup - works with both OpenAI and Anthropic
 client, agent = setup_agent(
     name="ChatBot",
-    model="gpt-4o",
+    model="gpt-4o",  # or "claude-3-5-sonnet-20241022"
     instructions="You are a helpful assistant."
 )
 

@@ -4,8 +4,9 @@ This integrates our browser wrapper into the tangent package.
 """
 
 from typing import Optional, Dict, Any, Tuple, List, Literal
-from tangent import setup_agent, Structured_Result
-from wrapper import BrowserWrapper  # Fixed import path
+from ..helpers import setup_agent
+from ..types import Structured_Result
+from ..wrappers import BrowserWrapper
 
 class BrowserAgent:
     """

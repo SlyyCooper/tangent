@@ -1,4 +1,5 @@
-from tangent import tangent, Agent, Response
+from ..core import tangent
+from ..types import Agent, Response
 from typing import Union, Optional, List
 
 def setup_agent(
